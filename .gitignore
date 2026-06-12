@@ -1,0 +1,8 @@
+# Project-local Go toolchain caches & binaries (isolation, see .mise.toml)
+/.go/
+/cheatsheet
+/dist/
+
+# Editor noise
+*.swp
+.DS_Store

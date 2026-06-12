@@ -1,0 +1,18 @@
+# Isolated, reproducible toolchain for cheatsheet-tui.
+# Nothing touches the system: the Go toolchain is managed by mise (installed
+# under ~/.local/share/mise) and ALL Go caches/binaries are redirected into
+# this project directory via the env vars below. Run `mise trust` once.
+
+[tools]
+go = "1.26"
+
+[env]
+# Keep the module cache, build cache, and installed binaries inside the repo
+# so `go get`/`go install` never write to the shared ~/go or ~/.cache.
+GOPATH = "{{config_root}}/.go"
+GOMODCACHE = "{{config_root}}/.go/pkg/mod"
+GOBIN = "{{config_root}}/.go/bin"
+GOCACHE = "{{config_root}}/.go/cache"
+# Pin toolchain selection to the mise-provided Go; never auto-download another.
+GOTOOLCHAIN = "local"
+GOFLAGS = "-mod=mod"
