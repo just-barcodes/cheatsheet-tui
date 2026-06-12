@@ -5,6 +5,7 @@
 
 [tools]
 go = "1.26"
+task = "3"
 
 [env]
 # Keep the module cache, build cache, and installed binaries inside the repo

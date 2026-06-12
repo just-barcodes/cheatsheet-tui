@@ -29,6 +29,15 @@ mise exec -- go test ./...    # run the executable specifications
 mise exec -- go build -o cheatsheet .
 ```
 
+Common commands are wrapped in a [Taskfile](https://taskfile.dev):
+
+```sh
+task            # list tasks
+task run        # build and launch the TUI
+task test       # run all tests
+task ci         # fmt check + vet + test + build
+```
+
 ## Run
 
 ```sh

@@ -1,0 +1,87 @@
+# Common commands for cheatsheet-tui.
+#   task          # list available tasks
+#   task test     # run the executable specifications
+#   task run      # build and launch the TUI
+#
+# Every Go command runs through `mise exec` so the pinned toolchain and the
+# project-local caches (.go/) are used even if mise isn't shell-activated.
+version: "3"
+
+vars:
+  GO: mise exec -- go
+  BIN: cheatsheet
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: Install the pinned toolchain (Go, task) into the isolated mise env
+    cmds:
+      - mise install
+
+  build:
+    desc: Build the cheatsheet binary
+    cmds:
+      - "{{.GO}} build -o {{.BIN}} ."
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BIN}}"
+
+  run:
+    desc: Build and launch the TUI (needs a real terminal)
+    deps: [build]
+    interactive: true
+    cmds:
+      - "./{{.BIN}} {{.CLI_ARGS}}"
+
+  init:
+    desc: Copy the built-in cheatsheets into your config dir for editing
+    deps: [build]
+    cmds:
+      - "./{{.BIN}} --init"
+
+  test:
+    desc: Run all tests (BDD specs + unit tests)
+    cmds:
+      - "{{.GO}} test ./..."
+
+  test:bdd:
+    desc: Run the Gherkin feature specs with scenario output
+    cmds:
+      - "{{.GO}} test -count=1 -v -run TestFeatures ."
+
+  fmt:
+    desc: Format all Go code
+    cmds:
+      - "{{.GO}} fmt ./..."
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - "{{.GO}} vet ./..."
+
+  tidy:
+    desc: Tidy and verify module dependencies
+    cmds:
+      - "{{.GO}} mod tidy"
+      - "{{.GO}} mod verify"
+
+  ci:
+    desc: Full check — formatting, vet, tests, build
+    cmds:
+      - 'test -z "$(mise exec -- gofmt -l $(git ls-files "*.go"))" || (echo "unformatted files (run: task fmt):"; mise exec -- gofmt -l $(git ls-files "*.go"); exit 1)'
+      - task: vet
+      - task: test
+      - task: build
+
+  clean:
+    desc: Remove the built binary
+    cmds:
+      - rm -f {{.BIN}}

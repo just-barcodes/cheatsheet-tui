@@ -96,7 +96,7 @@ type line struct {
 func (m Model) mainPane() string {
 	items := m.visible()
 	width := max(m.width-sidebarWidth-2, 20) // minus gap + pane border slack
-	innerWidth := width - 4 // pane padding + border
+	innerWidth := width - 4                  // pane padding + border
 
 	keyW := keyColumnWidth(items, innerWidth)
 	lines := m.buildLines(items, innerWidth, keyW)

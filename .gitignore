@@ -3,6 +3,9 @@
 /cheatsheet
 /dist/
 
+# go-task checksum cache
+/.task/
+
 # Editor noise
 *.swp
 .DS_Store
