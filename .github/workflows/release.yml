@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - uses: actions/cache@v4
+        with:
+          path: .go
+          key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: go-${{ runner.os }}-
+
+      # Full quality gate before anything ships.
+      - run: task ci
+
+      # Cross-compile linux/darwin x amd64/arm64 into dist/ with checksums —
+      # identical to running `task release:build` locally.
+      - run: task release:build
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/cheatsheet_*
+            dist/checksums.txt
+          generate_release_notes: true

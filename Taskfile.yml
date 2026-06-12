@@ -81,7 +81,19 @@ tasks:
       - task: test
       - task: build
 
+  release:build:
+    desc: Cross-compile release binaries into dist/ with checksums
+    cmds:
+      - rm -rf dist && mkdir -p dist
+      - for:
+          matrix:
+            OS: ["linux", "darwin"]
+            ARCH: ["amd64", "arm64"]
+        cmd: GOOS={{.ITEM.OS}} GOARCH={{.ITEM.ARCH}} mise exec -- go build -trimpath -ldflags="-s -w" -o dist/{{.BIN}}_{{.ITEM.OS}}_{{.ITEM.ARCH}} .
+      - cd dist && sha256sum {{.BIN}}_* > checksums.txt
+
   clean:
-    desc: Remove the built binary
+    desc: Remove the built binary and release artifacts
     cmds:
       - rm -f {{.BIN}}
+      - rm -rf dist

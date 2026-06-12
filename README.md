@@ -35,8 +35,12 @@ Common commands are wrapped in a [Taskfile](https://taskfile.dev):
 task            # list tasks
 task run        # build and launch the TUI
 task test       # run all tests
-task ci         # fmt check + vet + test + build
+task ci         # fmt check + vet + test + build (same gate as GitHub CI)
 ```
+
+GitHub Actions runs the same `task ci` on every push/PR, and pushing a
+`v*` tag cross-compiles linux/darwin (amd64/arm64) binaries via
+`task release:build` and attaches them to a GitHub release.
 
 ## Run
 
