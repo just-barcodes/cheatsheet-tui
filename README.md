@@ -24,7 +24,7 @@ the repo (`.go/`) by `.mise.toml`, so `go get`/`go install` never write to the
 shared `~/go` or `~/.cache`.
 
 ```sh
-mise trust && mise install   # one-time: fetch the pinned Go toolchain
+mise trust && task setup      # one-time: pinned toolchain + git hooks
 mise exec -- go test ./...    # run the executable specifications
 mise exec -- go build -o cheatsheet .
 ```

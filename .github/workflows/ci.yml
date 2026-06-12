@@ -25,3 +25,7 @@ jobs:
 
       # Same gate as local: gofmt check, vet, all tests (BDD + unit), build.
       - run: task ci
+
+      # Run the pre-commit hook checks over the whole tree, so commits made
+      # with --no-verify (or from machines without hooks) are still caught.
+      - run: lefthook run pre-commit --all-files

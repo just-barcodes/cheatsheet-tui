@@ -19,9 +19,10 @@ tasks:
     silent: true
 
   setup:
-    desc: Install the pinned toolchain (Go, task) into the isolated mise env
+    desc: Install the pinned toolchain (Go, task, lefthook) and the git hooks
     cmds:
       - mise install
+      - mise exec -- lefthook install
 
   build:
     desc: Build the cheatsheet binary

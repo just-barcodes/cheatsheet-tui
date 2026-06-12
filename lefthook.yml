@@ -1,0 +1,17 @@
+# Git hooks managed by lefthook (pinned in .mise.toml).
+# Install once with `task setup` (runs `lefthook install`).
+# CI runs the same checks via `lefthook run pre-commit --all-files`, so a
+# locally bypassed hook (--no-verify) still gets caught in the pipeline.
+pre-commit:
+  parallel: true
+  commands:
+    gofmt:
+      glob: "*.go"
+      run: >
+        test -z "$(mise exec -- gofmt -l {staged_files})" ||
+        { mise exec -- gofmt -l {staged_files}; echo "unformatted — run: task fmt"; exit 1; }
+    vet:
+      glob: "*.go"
+      run: mise exec -- task vet
+    test:
+      run: mise exec -- task test
