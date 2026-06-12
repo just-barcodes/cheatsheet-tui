@@ -2,8 +2,10 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -74,10 +76,40 @@ func LoadDir(dir string) ([]Cheatsheet, error) {
 		}
 		sheets = append(sheets, c)
 	}
+	sortByName(sheets)
+	return sheets, nil
+}
+
+// LoadFS parses every *.yaml/*.yml file at the root of fsys, sorted by sheet
+// name. Used to read the embedded built-in cheatsheets.
+func LoadFS(fsys fs.FS) ([]Cheatsheet, error) {
+	entries, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		return nil, err
+	}
+	var sheets []Cheatsheet
+	for _, e := range entries {
+		if e.IsDir() || !isYAML(e.Name()) {
+			continue
+		}
+		data, err := fs.ReadFile(fsys, e.Name())
+		if err != nil {
+			return nil, err
+		}
+		c, err := Load(bytes.NewReader(data))
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", e.Name(), err)
+		}
+		sheets = append(sheets, c)
+	}
+	sortByName(sheets)
+	return sheets, nil
+}
+
+func sortByName(sheets []Cheatsheet) {
 	sort.SliceStable(sheets, func(i, j int) bool {
 		return sheets[i].Name < sheets[j].Name
 	})
-	return sheets, nil
 }
 
 func isYAML(name string) bool {

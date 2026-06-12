@@ -23,6 +23,10 @@ type featureState struct {
 
 	items   []search.Item
 	results []search.Item
+
+	loc      config.Locator
+	existing map[string]bool
+	resolved config.Source
 }
 
 // --- loading steps ---
@@ -181,6 +185,55 @@ func (s *featureState) resultNHasKey(n int, keys string) error {
 	return nil
 }
 
+// --- location/resolution steps ---
+
+func (s *featureState) theDirFlagIs(path string) error {
+	s.loc.Flag = path
+	return nil
+}
+
+func (s *featureState) theEnvVarIs(path string) error {
+	s.loc.Env = path
+	return nil
+}
+
+func (s *featureState) aConfigDirThatExists(path string) error {
+	s.loc.ConfigDir = path
+	if s.existing == nil {
+		s.existing = map[string]bool{}
+	}
+	s.existing[path] = true
+	return nil
+}
+
+func (s *featureState) aConfigDirThatDoesNotExist(path string) error {
+	s.loc.ConfigDir = path
+	return nil
+}
+
+func (s *featureState) iResolveTheLocation() error {
+	s.loc.DirExists = func(p string) bool { return s.existing[p] }
+	s.resolved = s.loc.Resolve()
+	return nil
+}
+
+func (s *featureState) cheatsheetsLoadFrom(path string) error {
+	if s.resolved.Builtin {
+		return fmt.Errorf("resolved to built-in, want path %q", path)
+	}
+	if s.resolved.Path != path {
+		return fmt.Errorf("resolved path = %q, want %q", s.resolved.Path, path)
+	}
+	return nil
+}
+
+func (s *featureState) theBuiltinCheatsheetsAreUsed() error {
+	if !s.resolved.Builtin {
+		return fmt.Errorf("expected built-in cheatsheets, got path %q", s.resolved.Path)
+	}
+	return nil
+}
+
 // --- helpers ---
 
 func (s *featureState) hasKey(keys string) bool {
@@ -238,6 +291,14 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the results do not contain key "([^"]*)"$`, s.theResultsDoNotContainKey)
 	ctx.Step(`^I get (\d+) results$`, s.iGetNResults)
 	ctx.Step(`^result (\d+) has key "([^"]*)"$`, s.resultNHasKey)
+
+	ctx.Step(`^the --dir flag is "([^"]*)"$`, s.theDirFlagIs)
+	ctx.Step(`^the CHEATSHEET_DIR env var is "([^"]*)"$`, s.theEnvVarIs)
+	ctx.Step(`^a config directory "([^"]*)" that exists$`, s.aConfigDirThatExists)
+	ctx.Step(`^a config directory "([^"]*)" that does not exist$`, s.aConfigDirThatDoesNotExist)
+	ctx.Step(`^I resolve the cheatsheet location$`, s.iResolveTheLocation)
+	ctx.Step(`^cheatsheets load from "([^"]*)"$`, s.cheatsheetsLoadFrom)
+	ctx.Step(`^the built-in cheatsheets are used$`, s.theBuiltinCheatsheetsAreUsed)
 }
 
 func TestFeatures(t *testing.T) {
