@@ -10,6 +10,8 @@ version: "3"
 vars:
   GO: mise exec -- go
   BIN: cheatsheet
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
 
 tasks:
   default:
@@ -27,7 +29,7 @@ tasks:
   build:
     desc: Build the cheatsheet binary
     cmds:
-      - "{{.GO}} build -o {{.BIN}} ."
+      - "{{.GO}} build -ldflags='-X main.version={{.VERSION}}' -o {{.BIN}} ."
     sources:
       - "**/*.go"
       - go.mod
@@ -90,7 +92,7 @@ tasks:
           matrix:
             OS: ["linux", "darwin"]
             ARCH: ["amd64", "arm64"]
-        cmd: GOOS={{.ITEM.OS}} GOARCH={{.ITEM.ARCH}} mise exec -- go build -trimpath -ldflags="-s -w" -o dist/{{.BIN}}_{{.ITEM.OS}}_{{.ITEM.ARCH}} .
+        cmd: GOOS={{.ITEM.OS}} GOARCH={{.ITEM.ARCH}} mise exec -- go build -trimpath -ldflags="-s -w -X main.version={{.VERSION}}" -o dist/{{.BIN}}_{{.ITEM.OS}}_{{.ITEM.ARCH}} .
       - cd dist && sha256sum {{.BIN}}_* > checksums.txt
 
   clean:

@@ -1,0 +1,38 @@
+# Maintainer: Sam Rupprechter <sam.rupprechter@gmail.com>
+#
+# AUR package for cheatsheet-tui. Builds from the tagged GitHub release.
+# Before publishing: push the repo to GitHub, tag vX.Y.Z, then replace
+# 'SKIP' below with the real checksum (updpkgsums does this for you).
+pkgname=cheatsheet-tui
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Fast terminal cheat-sheet viewer with fuzzy search and vim navigation'
+arch=('x86_64' 'aarch64')
+url='https://github.com/just-barcodes/cheatsheet-tui'
+license=('MIT')
+depends=('glibc')
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS='-buildmode=pie -trimpath -mod=readonly -modcacherw'
+  go build -ldflags="-linkmode=external -X main.version=v$pkgver" -o cheatsheet .
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  go test ./...
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 cheatsheet "$pkgdir/usr/bin/cheatsheet"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

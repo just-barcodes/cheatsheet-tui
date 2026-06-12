@@ -24,6 +24,9 @@ import (
 //go:embed cheatsheets/*.yaml
 var builtinRoot embed.FS
 
+// version is stamped at build time via -ldflags "-X main.version=...".
+var version = "dev"
+
 // builtinFS exposes the embedded cheatsheets with the "cheatsheets/" prefix
 // stripped, so files sit at the root like a real directory.
 func builtinFS() fs.FS {
@@ -38,6 +41,7 @@ func main() {
 	flag.CommandLine.Init("cheatsheet", flag.ContinueOnError)
 	dir := flag.StringP("dir", "d", "", "directory of cheatsheet .yaml files (overrides the default search)")
 	doInit := flag.Bool("init", false, "copy the built-in cheatsheets into your config dir, then exit")
+	showVersion := flag.BoolP("version", "v", false, "print the version and exit")
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
 			os.Exit(0) // --help is a successful outcome, not an error
@@ -45,6 +49,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "cheatsheet: %v\n", err)
 		flag.Usage()
 		os.Exit(2)
+	}
+
+	if *showVersion {
+		fmt.Println("cheatsheet " + version)
+		return
 	}
 
 	cfgDir := configDir()

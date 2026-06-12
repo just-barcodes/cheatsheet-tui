@@ -42,6 +42,16 @@ GitHub Actions runs the same `task ci` on every push/PR, and pushing a
 `v*` tag cross-compiles linux/darwin (amd64/arm64) binaries via
 `task release:build` and attaches them to a GitHub release.
 
+## Install
+
+On Arch Linux (once published to the AUR — see `packaging/aur/README.md`):
+
+```sh
+yay -S cheatsheet-tui
+```
+
+Or grab a binary from the GitHub releases page, or build from source as below.
+
 ## Run
 
 ```sh
