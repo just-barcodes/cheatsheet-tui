@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -133,6 +134,62 @@ func TestJKMovesCursorWithinBounds(t *testing.T) {
 	m = press(m, "k")
 	if m.cursor != 0 {
 		t.Fatalf("cursor should clamp at 0, got %d", m.cursor)
+	}
+}
+
+// bigSheet returns one cheatsheet with many sections/bindings, far more than
+// fits a small terminal.
+func bigSheet() []config.Cheatsheet {
+	var secs []config.Section
+	for s := range 6 {
+		sec := config.Section{Title: fmt.Sprintf("Section %d", s)}
+		for b := range 8 {
+			sec.Bindings = append(sec.Bindings, config.Binding{
+				Keys: fmt.Sprintf("Ctrl + %d / Ctrl + Shift + %d", s, b),
+				Desc: fmt.Sprintf("Binding %d in section %d with a deliberately long description that must truncate, never wrap", b, s),
+			})
+		}
+		secs = append(secs, sec)
+	}
+	return []config.Cheatsheet{{Name: "Big", Sections: secs}}
+}
+
+func readyBig(height int) Model {
+	m := New(bigSheet())
+	next, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: height})
+	return next.(Model)
+}
+
+func TestOverflowingSheetNeverExceedsTerminalHeight(t *testing.T) {
+	m := readyBig(16)
+	for i := 0; i < 50; i++ { // walk the cursor through the whole list
+		if rows := strings.Count(m.View(), "\n") + 1; rows > 16 {
+			t.Fatalf("step %d: rendered %d rows into a 16-row terminal", i, rows)
+		}
+		m = press(m, "j")
+	}
+}
+
+func TestScrollWindowFollowsCursorToBottom(t *testing.T) {
+	m := readyBig(16)
+	m = press(m, "G")
+	v := m.View()
+	if !strings.Contains(v, "Binding 7 in section 5") {
+		t.Fatalf("expected last binding visible after G, got:\n%s", v)
+	}
+	if strings.Contains(v, "Binding 0 in section 0") {
+		t.Fatalf("expected first binding scrolled out after G, got:\n%s", v)
+	}
+}
+
+func TestScrollbarAppearsOnlyOnOverflow(t *testing.T) {
+	big := readyBig(16)
+	if !strings.Contains(big.View(), "█") {
+		t.Fatalf("expected scrollbar thumb on overflowing sheet")
+	}
+	small := ready() // sampleSheets fit comfortably in 30 rows
+	if strings.Contains(small.View(), "█") {
+		t.Fatalf("expected no scrollbar when everything fits")
 	}
 }
 

@@ -98,9 +98,16 @@ func (m Model) mainPane() string {
 	width := max(m.width-sidebarWidth-2, 20) // minus gap + pane border slack
 	innerWidth := width - 4                  // pane padding + border
 
-	keyW := keyColumnWidth(items, innerWidth)
-	lines := m.buildLines(items, innerWidth, keyW)
-	visibleLines := m.window(lines)
+	h := m.listHeight()
+	allLines := m.buildLines(items, innerWidth, 0) // probe pass for line count
+	overflow := len(allLines) > h
+	rowWidth := innerWidth
+	if overflow {
+		rowWidth -= 2 // make room for the scrollbar column
+	}
+	keyW := keyColumnWidth(items, rowWidth)
+	lines := m.buildLines(items, rowWidth, keyW)
+	visibleLines, start := m.window(lines)
 
 	var b strings.Builder
 	for i, ln := range visibleLines {
@@ -113,11 +120,40 @@ func (m Model) mainPane() string {
 		b.WriteString(placeholder.Render("no matches"))
 	}
 
+	content := b.String()
+	if overflow {
+		bar := scrollbar(h, len(lines), start)
+		content = lipgloss.JoinHorizontal(lipgloss.Top,
+			lipgloss.NewStyle().Width(rowWidth+1).Render(content), bar)
+	}
+
 	style := paneStyle
 	if m.mode == modeSearch {
 		style = paneActiveStyle
 	}
-	return style.Width(width).Height(m.listHeight()).Render(b.String())
+	return style.Width(width).Height(h).Render(content)
+}
+
+// scrollbar renders a vertical track of height h with a proportional thumb.
+func scrollbar(h, total, start int) string {
+	thumbLen := max(h*h/total, 1)
+	maxStart := total - h
+	thumbPos := 0
+	if maxStart > 0 {
+		thumbPos = start * (h - thumbLen) / maxStart
+	}
+	var b strings.Builder
+	for i := range h {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+		if i >= thumbPos && i < thumbPos+thumbLen {
+			b.WriteString(scrollThumb.Render("█"))
+		} else {
+			b.WriteString(scrollTrack.Render("░"))
+		}
+	}
+	return b.String()
 }
 
 // keyColumnWidth sizes the keycap column to the widest key on screen so rows
@@ -140,6 +176,9 @@ func (m Model) buildLines(items []search.Item, innerWidth, keyW int) []line {
 	for idx, it := range items {
 		group := it.Sheet + "\x00" + it.Section
 		if group != prevGroup {
+			if prevGroup != "" {
+				lines = append(lines, line{text: "", itemIdx: -1}) // section gap
+			}
 			header := it.Section
 			if m.mode == modeSearch {
 				header = it.Sheet + " · " + it.Section
@@ -154,8 +193,9 @@ func (m Model) buildLines(items []search.Item, innerWidth, keyW int) []line {
 
 func (m Model) renderRow(it search.Item, idx, innerWidth, keyW int) string {
 	selected := idx == m.cursor
-	key := kbdStyle.Width(keyW).Render(it.Keys)
-	descW := max(innerWidth-keyW-1, 4)
+	key := kbdStyle.Width(keyW).MaxHeight(1).Render(it.Keys)
+	// Row budget: 2-cell indent + key column + 1-cell gap + description.
+	descW := max(innerWidth-keyW-3, 4)
 	dStyle := descStyle
 	if selected {
 		dStyle = descSelStyle
@@ -169,12 +209,14 @@ func (m Model) renderRow(it search.Item, idx, innerWidth, keyW int) string {
 	return row
 }
 
-// window returns the slice of display lines that fits the pane, keeping the
-// selected binding visible. Scroll position is derived purely from the cursor.
-func (m Model) window(lines []line) []line {
+// window returns the slice of display lines that fits the pane plus its start
+// offset. Scroll position is derived purely from the cursor: the selected row
+// is kept centred once the list is long enough to scroll, which is stateless
+// and always keeps context visible above and below.
+func (m Model) window(lines []line) ([]line, int) {
 	h := m.listHeight()
 	if len(lines) <= h {
-		return lines
+		return lines, 0
 	}
 	cursorLine := 0
 	for i, ln := range lines {
@@ -183,16 +225,8 @@ func (m Model) window(lines []line) []line {
 			break
 		}
 	}
-	start := 0
-	if cursorLine >= h {
-		start = cursorLine - h + 1
-	}
-	end := start + h
-	if end > len(lines) {
-		end = len(lines)
-		start = end - h
-	}
-	return lines[start:end]
+	start := min(max(cursorLine-h/2, 0), len(lines)-h)
+	return lines[start : start+h], start
 }
 
 func (m Model) footer() string {

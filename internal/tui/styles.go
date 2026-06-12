@@ -29,8 +29,12 @@ var (
 			Foreground(lipgloss.Color("#0B0B12")).Background(accent).
 			Padding(0, 1)
 
-	sectionStyle = lipgloss.NewStyle().Bold(true).Foreground(accentHi).
-			MarginTop(1)
+	// No vertical margin: every rendered line must be exactly one terminal
+	// row so the scroll window math in view.go stays exact.
+	sectionStyle = lipgloss.NewStyle().Bold(true).Foreground(accentHi)
+
+	scrollThumb = lipgloss.NewStyle().Foreground(accent)
+	scrollTrack = lipgloss.NewStyle().Foreground(subtle)
 
 	kbdStyle = lipgloss.NewStyle().Bold(true).
 			Foreground(keyColor)
