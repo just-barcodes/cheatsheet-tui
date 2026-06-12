@@ -98,7 +98,8 @@ func (m Model) mainPane() string {
 	width := max(m.width-sidebarWidth-2, 20) // minus gap + pane border slack
 	innerWidth := width - 4 // pane padding + border
 
-	lines := m.buildLines(items, innerWidth)
+	keyW := keyColumnWidth(items, innerWidth)
+	lines := m.buildLines(items, innerWidth, keyW)
 	visibleLines := m.window(lines)
 
 	var b strings.Builder
@@ -119,9 +120,21 @@ func (m Model) mainPane() string {
 	return style.Width(width).Height(m.listHeight()).Render(b.String())
 }
 
+// keyColumnWidth sizes the keycap column to the widest key on screen so rows
+// stay aligned without wrapping, clamped to a sane range of the pane width.
+func keyColumnWidth(items []search.Item, innerWidth int) int {
+	widest := 0
+	for _, it := range items {
+		if w := lipgloss.Width(it.Keys); w > widest {
+			widest = w
+		}
+	}
+	return min(max(widest, 10), max(innerWidth/2, 10))
+}
+
 // buildLines flattens visible items into display lines, inserting a section
 // header whenever the (sheet, section) grouping changes.
-func (m Model) buildLines(items []search.Item, innerWidth int) []line {
+func (m Model) buildLines(items []search.Item, innerWidth, keyW int) []line {
 	var lines []line
 	prevGroup := ""
 	for idx, it := range items {
@@ -134,14 +147,13 @@ func (m Model) buildLines(items []search.Item, innerWidth int) []line {
 			lines = append(lines, line{text: sectionStyle.Render(header), itemIdx: -1})
 			prevGroup = group
 		}
-		lines = append(lines, line{text: m.renderRow(it, idx, innerWidth), itemIdx: idx})
+		lines = append(lines, line{text: m.renderRow(it, idx, innerWidth, keyW), itemIdx: idx})
 	}
 	return lines
 }
 
-func (m Model) renderRow(it search.Item, idx, innerWidth int) string {
+func (m Model) renderRow(it search.Item, idx, innerWidth, keyW int) string {
 	selected := idx == m.cursor
-	keyW := 16
 	key := kbdStyle.Width(keyW).Render(it.Keys)
 	descW := max(innerWidth-keyW-1, 4)
 	dStyle := descStyle
