@@ -9,13 +9,13 @@ package main
 
 import (
 	"embed"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	flag "github.com/spf13/pflag"
 
 	"github.com/sam/cheatsheet-tui/internal/config"
 	"github.com/sam/cheatsheet-tui/internal/tui"
@@ -35,9 +35,17 @@ func builtinFS() fs.FS {
 }
 
 func main() {
-	dir := flag.String("dir", "", "directory of cheatsheet .yaml files (overrides the default search)")
+	flag.CommandLine.Init("cheatsheet", flag.ContinueOnError)
+	dir := flag.StringP("dir", "d", "", "directory of cheatsheet .yaml files (overrides the default search)")
 	doInit := flag.Bool("init", false, "copy the built-in cheatsheets into your config dir, then exit")
-	flag.Parse()
+	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			os.Exit(0) // --help is a successful outcome, not an error
+		}
+		fmt.Fprintf(os.Stderr, "cheatsheet: %v\n", err)
+		flag.Usage()
+		os.Exit(2)
+	}
 
 	cfgDir := configDir()
 
