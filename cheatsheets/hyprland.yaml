@@ -1,0 +1,41 @@
+name: Hyprland
+description: Wayland tiling compositor
+icon: "🪟"
+sections:
+  - title: Window Focus
+    bindings:
+      - keys: "SUPER + h/j/k/l"
+        desc: "Move focus left/down/up/right"
+      - keys: "SUPER + Tab"
+        desc: "Cycle to next window"
+      - keys: "SUPER + f"
+        desc: "Toggle fullscreen"
+      - keys: "SUPER + v"
+        desc: "Toggle floating"
+
+  - title: Window Management
+    bindings:
+      - keys: "SUPER + Q"
+        desc: "Close active window"
+      - keys: "SUPER + SHIFT + h/j/k/l"
+        desc: "Move window in direction"
+      - keys: "SUPER + mouse drag"
+        desc: "Move / resize floating window"
+
+  - title: Workspaces
+    bindings:
+      - keys: "SUPER + 1..9"
+        desc: "Switch to workspace N"
+      - keys: "SUPER + SHIFT + 1..9"
+        desc: "Move window to workspace N"
+      - keys: "SUPER + s"
+        desc: "Toggle special (scratchpad) workspace"
+
+  - title: Launchers
+    bindings:
+      - keys: "SUPER + Return"
+        desc: "Open terminal"
+      - keys: "SUPER + R"
+        desc: "Open application launcher"
+      - keys: "SUPER + E"
+        desc: "Open file manager"

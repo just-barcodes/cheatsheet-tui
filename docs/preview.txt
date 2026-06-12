@@ -1,0 +1,29 @@
+  ⌘ Cheatsheet   Vim — Modal text editor
+/ press / to search all hotkeys
+╭──────────────────────╮╭────────────────────────────────────────────────────────────────────╮
+│  🪟  Hyprland        ││                                                                    │
+│  🐧  System          ││ Movement                                                           │
+│  📝  Vim             ││   h j k l          Move left / down / up / right                   │
+│                      ││   w / b            Next / previous word                            │
+│                      ││   0 / $            Start / end of line                             │
+│                      ││   gg / G           Top / bottom of file                            │
+│                      ││   Ctrl + d / Ctrl  Half page down / up                             │
+│                      ││   + u                                                              │
+│                      ││                                                                    │
+│                      ││ Editing                                                            │
+│                      ││   i / a            Insert before / after cursor                    │
+│                      ││   o / O            Open line below / above                         │
+│                      ││   dd / yy          Delete / yank line                              │
+│                      ││   p / P            Paste after / before cursor                     │
+│                      ││   u / Ctrl + r     Undo / redo                                     │
+│                      ││   ciw              Change inner word                               │
+│                      ││                                                                    │
+│                      ││ Search & Replace                                                   │
+│                      ││   /pattern         Search forward for pattern                      │
+╰──────────────────────╯│   n / N            Next / previous match                           │
+                        │   :%s/old/new/g    Replace all in file                             │
+                        │   *                Search word under cursor                        │
+                        │                                                                    │
+                        │ Files & Windows                                                    │
+                        ╰────────────────────────────────────────────────────────────────────╯
+j/k move  ·  h/l·tab sheet  ·  g/G top/bottom  ·  / search  ·  q quit

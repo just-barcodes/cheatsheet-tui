@@ -1,0 +1,51 @@
+name: Vim
+description: Modal text editor
+icon: "📝"
+sections:
+  - title: Movement
+    bindings:
+      - keys: "h j k l"
+        desc: "Move left / down / up / right"
+      - keys: "w / b"
+        desc: "Next / previous word"
+      - keys: "0 / $"
+        desc: "Start / end of line"
+      - keys: "gg / G"
+        desc: "Top / bottom of file"
+      - keys: "Ctrl + d / Ctrl + u"
+        desc: "Half page down / up"
+
+  - title: Editing
+    bindings:
+      - keys: "i / a"
+        desc: "Insert before / after cursor"
+      - keys: "o / O"
+        desc: "Open line below / above"
+      - keys: "dd / yy"
+        desc: "Delete / yank line"
+      - keys: "p / P"
+        desc: "Paste after / before cursor"
+      - keys: "u / Ctrl + r"
+        desc: "Undo / redo"
+      - keys: "ciw"
+        desc: "Change inner word"
+
+  - title: Search & Replace
+    bindings:
+      - keys: "/pattern"
+        desc: "Search forward for pattern"
+      - keys: "n / N"
+        desc: "Next / previous match"
+      - keys: ":%s/old/new/g"
+        desc: "Replace all in file"
+      - keys: "*"
+        desc: "Search word under cursor"
+
+  - title: Files & Windows
+    bindings:
+      - keys: ":w / :q / :wq"
+        desc: "Write / quit / write-and-quit"
+      - keys: ":sp / :vsp"
+        desc: "Horizontal / vertical split"
+      - keys: "Ctrl + w then h/j/k/l"
+        desc: "Move between splits"

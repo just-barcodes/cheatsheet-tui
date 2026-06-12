@@ -1,0 +1,34 @@
+name: System
+description: General Linux & shell shortcuts
+icon: "🐧"
+sections:
+  - title: Shell (readline)
+    bindings:
+      - keys: "Ctrl + a / Ctrl + e"
+        desc: "Jump to start / end of line"
+      - keys: "Ctrl + w"
+        desc: "Delete previous word"
+      - keys: "Ctrl + u / Ctrl + k"
+        desc: "Cut to start / end of line"
+      - keys: "Ctrl + r"
+        desc: "Reverse-search command history"
+      - keys: "Ctrl + l"
+        desc: "Clear the screen"
+
+  - title: Process Control
+    bindings:
+      - keys: "Ctrl + c"
+        desc: "Interrupt (SIGINT) foreground job"
+      - keys: "Ctrl + z"
+        desc: "Suspend job; resume with fg/bg"
+      - keys: "kill -9 <pid>"
+        desc: "Force-kill a process"
+
+  - title: Files & Navigation
+    bindings:
+      - keys: "cd -"
+        desc: "Return to previous directory"
+      - keys: "!! / !$"
+        desc: "Last command / last argument"
+      - keys: "find . -name '*.go'"
+        desc: "Find files by name"
