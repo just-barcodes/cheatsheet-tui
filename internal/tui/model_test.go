@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/sam/cheatsheet-tui/internal/config"
+	"github.com/just-barcodes/cheatsheet-tui/internal/config"
 )
 
 // sampleSheets are pre-sorted by name, exactly as config.LoadDir delivers them.

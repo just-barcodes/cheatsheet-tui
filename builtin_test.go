@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/sam/cheatsheet-tui/internal/config"
+	"github.com/just-barcodes/cheatsheet-tui/internal/config"
 )
 
 // The built-in cheatsheets ship inside the binary, so a malformed YAML file

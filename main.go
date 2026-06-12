@@ -17,8 +17,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	flag "github.com/spf13/pflag"
 
-	"github.com/sam/cheatsheet-tui/internal/config"
-	"github.com/sam/cheatsheet-tui/internal/tui"
+	"github.com/just-barcodes/cheatsheet-tui/internal/config"
+	"github.com/just-barcodes/cheatsheet-tui/internal/tui"
 )
 
 //go:embed cheatsheets/*.yaml

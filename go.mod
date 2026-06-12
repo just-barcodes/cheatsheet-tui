@@ -1,4 +1,4 @@
-module github.com/sam/cheatsheet-tui
+module github.com/just-barcodes/cheatsheet-tui
 
 go 1.26.4
 

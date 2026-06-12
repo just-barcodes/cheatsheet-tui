@@ -9,8 +9,8 @@ import (
 
 	"github.com/cucumber/godog"
 
-	"github.com/sam/cheatsheet-tui/internal/config"
-	"github.com/sam/cheatsheet-tui/internal/search"
+	"github.com/just-barcodes/cheatsheet-tui/internal/config"
+	"github.com/just-barcodes/cheatsheet-tui/internal/search"
 )
 
 // featureState holds the world shared between steps in a scenario.

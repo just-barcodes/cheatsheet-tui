@@ -4,8 +4,8 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/sam/cheatsheet-tui/internal/config"
-	"github.com/sam/cheatsheet-tui/internal/search"
+	"github.com/just-barcodes/cheatsheet-tui/internal/config"
+	"github.com/just-barcodes/cheatsheet-tui/internal/search"
 )
 
 type mode int

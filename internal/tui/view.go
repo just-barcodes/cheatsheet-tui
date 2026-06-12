@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/sam/cheatsheet-tui/internal/search"
+	"github.com/just-barcodes/cheatsheet-tui/internal/search"
 )
 
 const (
