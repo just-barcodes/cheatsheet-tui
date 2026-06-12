@@ -50,6 +50,13 @@ On Arch Linux (once published to the AUR — see `packaging/aur/README.md`):
 yay -S cheatsheet-tui
 ```
 
+With a Go toolchain (installs to `$GOBIN`, usually `~/go/bin` — note the
+binary is named `cheatsheet-tui` after the module, not `cheatsheet`):
+
+```sh
+go install github.com/just-barcodes/cheatsheet-tui@latest
+```
+
 Or grab a binary from the GitHub releases page, or build from source as below.
 
 ## Run
