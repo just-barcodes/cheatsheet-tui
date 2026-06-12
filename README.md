@@ -32,10 +32,30 @@ mise exec -- go build -o cheatsheet .
 ## Run
 
 ```sh
-./cheatsheet                       # reads ./cheatsheets, or $CHEATSHEET_DIR,
-                                   # or ~/.config/cheatsheet
-./cheatsheet --dir ./cheatsheets   # explicit directory
+./cheatsheet                       # uses your cheatsheets, or the built-ins
+./cheatsheet --dir ./cheatsheets   # load from an explicit directory
 ```
+
+## Defining your own cheatsheets
+
+Cheatsheets are read from the **first** of these that applies:
+
+1. `--dir <path>` flag
+2. `$CHEATSHEET_DIR` environment variable
+3. your config dir — `~/.config/cheatsheet` (`$XDG_CONFIG_HOME/cheatsheet`)
+4. the **built-in** cheatsheets bundled into the binary
+
+To start customising, scaffold the built-ins into your config dir and edit them:
+
+```sh
+./cheatsheet --init     # writes vim/hyprland/system .yaml to ~/.config/cheatsheet
+                        # (never overwrites files you already have)
+$EDITOR ~/.config/cheatsheet/vim.yaml
+./cheatsheet            # now reads your edited copies
+```
+
+Add a new `*.yaml` file to that directory and it shows up in the sidebar,
+sorted by `name`.
 
 ## Keys
 
