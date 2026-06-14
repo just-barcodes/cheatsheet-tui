@@ -42,7 +42,47 @@ func Load(r io.Reader) (Cheatsheet, error) {
 	if err := dec.Decode(&c); err != nil {
 		return Cheatsheet{}, err
 	}
+	if err := c.validate(); err != nil {
+		return Cheatsheet{}, err
+	}
 	return c, nil
+}
+
+// validate enforces the required shape of a cheatsheet: it needs a name, and
+// every binding needs both its keys and a description. Section titles and the
+// sheet-level description are optional, and a sheet may have no sections at all.
+// It returns the first problem found so a malformed file fails loudly at load
+// time instead of rendering blank or nameless rows.
+func (c Cheatsheet) validate() error {
+	if strings.TrimSpace(c.Name) == "" {
+		return fmt.Errorf("name is required")
+	}
+	for si, sec := range c.Sections {
+		for bi, b := range sec.Bindings {
+			at := bindingRef(sec.Title, si, bi, b.Keys)
+			if strings.TrimSpace(b.Keys) == "" {
+				return fmt.Errorf("%s: keys is required", at)
+			}
+			if strings.TrimSpace(b.Desc) == "" {
+				return fmt.Errorf("%s: desc is required", at)
+			}
+		}
+	}
+	return nil
+}
+
+// bindingRef names a binding for an error message, preferring the human section
+// title and the binding's keys when present and falling back to 1-based indices
+// (since both the title and the keys are exactly what may be missing).
+func bindingRef(title string, si, bi int, keys string) string {
+	sec := fmt.Sprintf("section %d", si+1)
+	if strings.TrimSpace(title) != "" {
+		sec = fmt.Sprintf("section %q", title)
+	}
+	if strings.TrimSpace(keys) != "" {
+		return fmt.Sprintf("%s, binding %q", sec, keys)
+	}
+	return fmt.Sprintf("%s, binding %d", sec, bi+1)
 }
 
 // LoadFile parses a single cheatsheet YAML file.

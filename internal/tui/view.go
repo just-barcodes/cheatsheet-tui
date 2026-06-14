@@ -92,7 +92,7 @@ func (m Model) titleBar() string {
 	left := titleStyle.Render(" ⌘ Cheatsheet ")
 	desc := cur.Name
 	if cur.Description != "" {
-		desc += " — " + cur.Description
+		desc += " - " + cur.Description
 	}
 	if m.mode == modeSearch {
 		desc = "Search across all cheatsheets"
@@ -225,7 +225,7 @@ func (m Model) mainPane(lay paneLayout) string {
 	h := m.listHeight()
 
 	if lay.tooSmall {
-		msg := placeholder.Render("Window too small — enlarge it to view hotkeys")
+		msg := placeholder.Render("Window too small - enlarge it to view hotkeys")
 		return style.Width(width).Height(h).Render(msg)
 	}
 
@@ -243,8 +243,8 @@ func (m Model) mainPane(lay paneLayout) string {
 }
 
 // flowColumns lays the windowed lines into up to cols newspaper columns of h
-// rows each — the first h lines fill column one, the next h fill column two,
-// and so on — then joins the columns side by side.
+// rows each - the first h lines fill column one, the next h fill column two,
+// and so on - then joins the columns side by side.
 func flowColumns(lines []line, cols, h, colWidth int) string {
 	blocks := make([]string, 0, cols)
 	for c := range cols {
@@ -336,7 +336,7 @@ func (m Model) buildLines(items []search.Item, colWidth, keyW int) []line {
 // wrapped description align under it with a blank key column.
 //
 // The selected row is emitted as a single styled block so its highlight bar is
-// one continuous fill — both prettier and a precondition for clean background
+// one continuous fill - both prettier and a precondition for clean background
 // painting, which re-asserts the screen background after every style reset.
 func renderItemRows(it search.Item, selected bool, colWidth, keyW int) []string {
 	descW := max(colWidth-keyW-rowIndent-keyGap, minDescWidth)
@@ -408,8 +408,8 @@ func (m Model) footer() string {
 			{"type", "filter"}, {"↑↓", "move"}, {"esc", "exit"}, {"^c", "quit"},
 		}
 	} else {
-		// The column control always reflects the chosen setting — "auto" or the
-		// pinned count — not how many columns happen to be visible right now.
+		// The column control always reflects the chosen setting - "auto" or the
+		// pinned count - not how many columns happen to be visible right now.
 		cols := "auto"
 		if m.cols > 0 {
 			cols = fmt.Sprintf("%d", m.cols)

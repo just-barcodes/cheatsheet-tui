@@ -20,7 +20,7 @@ const ThemeFileName = "theme.yaml"
 // presets are the built-in named themes, selectable with `--theme <name>` or a
 // `name:` line in theme.yaml. To stay cohesive (the hallmark of these palettes)
 // each themed preset uses one accent hue for all chrome and section headers, and
-// reserves cyan for the keycaps — never a third clashing hue.
+// reserves cyan for the keycaps - never a third clashing hue.
 //
 // selenized-* use the Selenized palette (https://github.com/jan-warchol/selenized);
 // solarized-* use Ethan Schoonover's Solarized (https://ethanschoonover.com/solarized).
@@ -112,7 +112,7 @@ type ThemeLocator struct {
 	ConfigDir string // e.g. ~/.config/cheatsheet ("" if unavailable)
 }
 
-// Resolve picks the theme source: an explicit --theme wins — a built-in name
+// Resolve picks the theme source: an explicit --theme wins - a built-in name
 // selects that preset, anything else is a file path that must exist; otherwise
 // theme.yaml in the config dir is used if present; otherwise no theme.
 func (l ThemeLocator) Resolve() ThemeSource {
@@ -131,7 +131,7 @@ func (l ThemeLocator) Resolve() ThemeSource {
 
 // Theme overrides the UI color palette. Every field is optional; an empty value
 // keeps the built-in default. Colors are either a hex string like "#A78BFA" or
-// a 0–255 terminal color number like "63".
+// a 0-255 terminal color number like "63".
 type Theme struct {
 	Name   string      `yaml:"name"`   // optional built-in preset to start from
 	Colors ThemeColors `yaml:"colors"` // overrides applied on top of the preset/defaults
@@ -195,7 +195,7 @@ func (base ThemeColors) overlay(o ThemeColors) ThemeColors {
 	}
 }
 
-// LoadThemeFile parses theme.yaml at path. A missing file is not an error — it
+// LoadThemeFile parses theme.yaml at path. A missing file is not an error - it
 // simply means the defaults apply.
 func LoadThemeFile(path string) (Theme, error) {
 	f, err := os.Open(path)
@@ -216,26 +216,34 @@ func LoadThemeFile(path string) (Theme, error) {
 var hexColor = regexp.MustCompile(`^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$`)
 
 // validate rejects malformed colours so a typo surfaces as an error instead of
-// silently rendering as no colour.
+// silently rendering as no colour. Fields are checked in declaration order so a
+// file with several bad colours always reports the same (first) one.
 func (t Theme) validate() error {
-	fields := map[string]string{
-		"background":    t.Colors.Background,
-		"accent":        t.Colors.Accent,
-		"accent_bright": t.Colors.AccentBright,
-		"keycap":        t.Colors.Keycap,
-		"foreground":    t.Colors.Foreground,
-		"muted":         t.Colors.Muted,
-		"border":        t.Colors.Border,
-		"selection":     t.Colors.Selection,
+	fields := []struct{ name, val string }{
+		{"background", t.Colors.Background},
+		{"accent", t.Colors.Accent},
+		{"accent_bright", t.Colors.AccentBright},
+		{"keycap", t.Colors.Keycap},
+		{"foreground", t.Colors.Foreground},
+		{"muted", t.Colors.Muted},
+		{"border", t.Colors.Border},
+		{"selection", t.Colors.Selection},
 	}
-	for name, val := range fields {
-		if val == "" || hexColor.MatchString(val) {
+	for _, f := range fields {
+		if isColor(f.val) {
 			continue
 		}
-		if n, err := strconv.Atoi(val); err == nil && n >= 0 && n <= 255 {
-			continue
-		}
-		return fmt.Errorf("colors.%s: %q is not a hex color (#RGB/#RRGGBB) or a 0–255 number", name, val)
+		return fmt.Errorf("colors.%s: %q is not a hex color (#RGB/#RRGGBB) or a 0-255 number", f.name, f.val)
 	}
 	return nil
+}
+
+// isColor reports whether s is an acceptable colour: unset, a #RGB/#RRGGBB hex
+// string, or a 0-255 terminal colour number.
+func isColor(s string) bool {
+	if s == "" || hexColor.MatchString(s) {
+		return true
+	}
+	n, err := strconv.Atoi(s)
+	return err == nil && n >= 0 && n <= 255
 }

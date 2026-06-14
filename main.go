@@ -170,8 +170,8 @@ func scaffold(dir string) error {
 // themeSample is a ready-to-edit theme.yaml seeded by --init. The values are the
 // built-in defaults, so it changes nothing until edited; delete a line to fall
 // back to that default.
-const themeSample = `# cheatsheet colors — edit a value, or delete a line to keep the default.
-# Each color is a hex string ("#A78BFA") or a 0–255 terminal color number.
+const themeSample = `# cheatsheet colors - edit a value, or delete a line to keep the default.
+# Each color is a hex string ("#A78BFA") or a 0-255 terminal color number.
 #
 # Start from a built-in theme and tweak from there (see: cheatsheet --list-themes):
 # name: selenized-dark

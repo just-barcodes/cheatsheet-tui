@@ -47,3 +47,52 @@ Feature: Loading cheatsheets from YAML
       """
     When I load that cheatsheet
     Then loading fails with an error
+
+  Scenario: A binding missing its description is rejected
+    Given a cheatsheet file "vim.yaml" with content:
+      """
+      name: Vim
+      sections:
+        - title: Movement
+          bindings:
+            - keys: "h j k l"
+      """
+    When I load that cheatsheet
+    Then loading fails with an error
+
+  Scenario: A binding missing its keys is rejected
+    Given a cheatsheet file "vim.yaml" with content:
+      """
+      name: Vim
+      sections:
+        - title: Movement
+          bindings:
+            - desc: "Move left/down/up/right"
+      """
+    When I load that cheatsheet
+    Then loading fails with an error
+
+  Scenario: A cheatsheet missing its name is rejected
+    Given a cheatsheet file "vim.yaml" with content:
+      """
+      sections:
+        - title: Movement
+          bindings:
+            - keys: "h j k l"
+              desc: "Move left/down/up/right"
+      """
+    When I load that cheatsheet
+    Then loading fails with an error
+
+  Scenario: Section titles and the sheet description are optional
+    Given a cheatsheet file "vim.yaml" with content:
+      """
+      name: Vim
+      sections:
+        - bindings:
+            - keys: "h j k l"
+              desc: "Move left/down/up/right"
+      """
+    When I load that cheatsheet
+    Then the cheatsheet name is "Vim"
+    And binding "h j k l" has description "Move left/down/up/right"

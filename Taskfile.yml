@@ -77,7 +77,7 @@ tasks:
       - "{{.GO}} mod verify"
 
   ci:
-    desc: Full check — formatting, vet, tests, build
+    desc: Full check - formatting, vet, tests, build
     cmds:
       - 'test -z "$(mise exec -- gofmt -l $(git ls-files "*.go"))" || (echo "unformatted files (run: task fmt):"; mise exec -- gofmt -l $(git ls-files "*.go"); exit 1)'
       - task: vet

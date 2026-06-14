@@ -9,7 +9,7 @@ pre-commit:
       glob: "*.go"
       run: >
         test -z "$(mise exec -- gofmt -l {staged_files})" ||
-        { mise exec -- gofmt -l {staged_files}; echo "unformatted — run: task fmt"; exit 1; }
+        { mise exec -- gofmt -l {staged_files}; echo "unformatted - run: task fmt"; exit 1; }
     vet:
       glob: "*.go"
       run: mise exec -- task vet

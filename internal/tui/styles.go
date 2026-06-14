@@ -140,7 +140,7 @@ func readableOn(bg lipgloss.Color) lipgloss.Color {
 	if !ok {
 		return light
 	}
-	// Perceptual luminance on a 0–255 scale.
+	// Perceptual luminance on a 0-255 scale.
 	if 0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b) > 150 {
 		return dark
 	}

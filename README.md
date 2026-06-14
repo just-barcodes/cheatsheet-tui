@@ -8,14 +8,14 @@ TUI that opens instantly.
 
 ## Features
 
-- **YAML cheatsheets** — one file per program/app/type (`vim`, `hyprland`,
+- **YAML cheatsheets** - one file per program/app/type (`vim`, `hyprland`,
   `system`, …), grouped into sections.
 - **Instant fuzzy search** (`/`) across every cheatsheet at once.
-- **Multi-column layout** — hotkeys flow into side-by-side columns on wide
+- **Multi-column layout** - hotkeys flow into side-by-side columns on wide
   terminals; press `c` to choose the column count yourself.
-- **Vim navigation** — `j/k` move, `h/l` / `tab` switch sheets, `g/G` top/bottom,
+- **Vim navigation** - `j/k` move, `h/l` / `tab` switch sheets, `g/G` top/bottom,
   `ctrl-d/ctrl-u` half-page.
-- **Modern look** — rounded panes, colour-coded keycaps, a highlighted
+- **Modern look** - rounded panes, colour-coded keycaps, a highlighted
   selection bar. Built on Bubble Tea + Lip Gloss.
 
 ## Isolated, reproducible toolchain
@@ -46,13 +46,13 @@ GitHub Actions runs the same `task ci` on every push/PR, and pushing a
 
 ## Install
 
-On Arch Linux (once published to the AUR — see `packaging/aur/README.md`):
+On Arch Linux (once published to the AUR - see `packaging/aur/README.md`):
 
 ```sh
 yay -S cheatsheet-tui
 ```
 
-With a Go toolchain (installs to `$GOBIN`, usually `~/go/bin` — note the
+With a Go toolchain (installs to `$GOBIN`, usually `~/go/bin` - note the
 binary is named `cheatsheet-tui` after the module, not `cheatsheet`):
 
 ```sh
@@ -75,7 +75,7 @@ Cheatsheets are read from the **first** of these that applies:
 
 1. `--dir <path>` flag
 2. `$CHEATSHEET_DIR` environment variable
-3. your config dir — `~/.config/cheatsheet` (`$XDG_CONFIG_HOME/cheatsheet`)
+3. your config dir - `~/.config/cheatsheet` (`$XDG_CONFIG_HOME/cheatsheet`)
 4. the **built-in** cheatsheets bundled into the binary
 
 To start customising, scaffold the built-ins into your config dir and edit them:
@@ -93,9 +93,9 @@ sorted by `name`.
 ## Theming
 
 Drop a `theme.yaml` in your config dir (`~/.config/cheatsheet`) to recolor the
-UI — no code, no rebuild. `--init` seeds one with the defaults; edit a value, or
+UI - no code, no rebuild. `--init` seeds one with the defaults; edit a value, or
 delete a line to keep that default. Each color is a hex string (`"#A78BFA"`) or
-a `0`–`255` terminal color number.
+a `0`-`255` terminal color number.
 
 Built-in themes (`--list-themes`): `default`, `selenized-dark/-light`,
 `solarized-dark/-light`, `dracula`, `nord`, `gruvbox-dark/-light`, `tokyo-night`,
@@ -106,7 +106,7 @@ Built-in themes (`--list-themes`): `default`, `selenized-dark/-light`,
 ```
 
 ```yaml
-# ~/.config/cheatsheet/theme.yaml — base on a preset, then tweak a few colors
+# ~/.config/cheatsheet/theme.yaml - base on a preset, then tweak a few colors
 name: selenized-dark
 colors:
   keycap: "#ffffff"
@@ -130,8 +130,8 @@ colors:
   selection: "#312E81"     # highlighted row background
 ```
 
-> Terminal apps can't change the font or its size — that's controlled by your
-> terminal emulator — so theming covers colors only.
+> Terminal apps can't change the font or its size - that's controlled by your
+> terminal emulator - so theming covers colors only.
 
 ## Keys
 
@@ -168,9 +168,9 @@ sidebar, sorted by `name`.
 
 Behaviour is driven by executable specifications (RED → GREEN → REFACTOR):
 
-- `features/*.feature` — Gherkin specs for loading and search, run by
+- `features/*.feature` - Gherkin specs for loading and search, run by
   [godog](https://github.com/cucumber/godog) via `features_test.go`.
-- `internal/tui/model_test.go` — TUI navigation/search behaviour.
+- `internal/tui/model_test.go` - TUI navigation/search behaviour.
 
 ```sh
 mise exec -- go test ./...

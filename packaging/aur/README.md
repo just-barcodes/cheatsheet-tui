@@ -9,7 +9,7 @@ git remote you push it to. One-time prerequisites, then the release flow.
    the real repository (also update `module` in `go.mod` if it differs).
 2. **Create an AUR account** at <https://aur.archlinux.org> and add your SSH
    public key under *My Account*.
-3. **Clone the (new, empty) AUR package repo** — cloning a non-existent
+3. **Clone the (new, empty) AUR package repo** - cloning a non-existent
    package name creates it on first push:
 
    ```sh
@@ -19,7 +19,7 @@ git remote you push it to. One-time prerequisites, then the release flow.
 ## Releasing a version
 
 ```sh
-# 1. Tag and push — the GitHub release workflow runs automatically
+# 1. Tag and push - the GitHub release workflow runs automatically
 git tag v0.1.0 && git push --tags
 
 # 2. Update PKGBUILD: set pkgver, reset pkgrel=1, fill the real checksum
@@ -30,7 +30,7 @@ updpkgsums                      # from pacman-contrib; rewrites sha256sums
 makepkg --cleanbuild --syncdeps   # or: pkgctl build
 namcap *.pkg.tar.zst              # optional lint
 
-# 4. Regenerate .SRCINFO — the AUR rejects pushes without a current one
+# 4. Regenerate .SRCINFO - the AUR rejects pushes without a current one
 makepkg --printsrcinfo > .SRCINFO
 
 # 5. Copy PKGBUILD + .SRCINFO into the AUR clone, commit, push
@@ -45,7 +45,7 @@ Users then install with `yay -S cheatsheet-tui` (or `paru`, etc.).
 
 ## Notes
 
-- `sha256sums=('SKIP')` is a placeholder; the AUR expects real checksums —
+- `sha256sums=('SKIP')` is a placeholder; the AUR expects real checksums -
   always run `updpkgsums` after tagging.
 - The build follows the Arch Go package guidelines (PIE, trimpath,
   readonly modules, external linking) and stamps the version via
@@ -53,4 +53,4 @@ Users then install with `yay -S cheatsheet-tui` (or `paru`, etc.).
 - `check()` runs the full test suite (BDD specs + unit tests) during the
   package build.
 - A `-bin` variant repackaging the GitHub release binaries is possible later;
-  start with this source package — it is what AUR reviewers prefer.
+  start with this source package - it is what AUR reviewers prefer.

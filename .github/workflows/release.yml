@@ -24,7 +24,7 @@ jobs:
       # Full quality gate before anything ships.
       - run: task ci
 
-      # Cross-compile linux/darwin x amd64/arm64 into dist/ with checksums —
+      # Cross-compile linux/darwin x amd64/arm64 into dist/ with checksums -
       # identical to running `task release:build` locally.
       - run: task release:build
 
