@@ -11,7 +11,13 @@ import (
 
 const (
 	sidebarWidth = 22
-	chromeRows   = 5 // title + search + footer + two pane borders
+	chromeRows   = 5  // title + search + footer + two pane borders
+	colGap       = 2  // blank cells between newspaper columns
+	maxColumns   = 3  // hotkeys never split into more than three columns
+	rowIndent    = 2  // leading spaces before each binding row
+	keyGap       = 1  // cells between the key column and the description
+	minDescWidth = 12 // narrowest a description may get before we drop a column
+	maxKeyWidth  = 24 // keys wider than this truncate rather than starve the desc
 )
 
 // listHeight is how many body rows the main pane can show.
@@ -23,6 +29,11 @@ func (m Model) listHeight() int {
 	return h
 }
 
+// mainWidth is the outer width of the hotkey pane; mainInnerWidth is the space
+// left for content once the pane border and padding are removed.
+func (m Model) mainWidth() int      { return max(m.width-sidebarWidth-2, 20) }
+func (m Model) mainInnerWidth() int { return m.mainWidth() - 4 }
+
 // View implements tea.Model.
 func (m Model) View() string {
 	if !m.ready {
@@ -32,7 +43,8 @@ func (m Model) View() string {
 		return "No cheatsheets found. Add a .yaml file to your cheatsheets directory."
 	}
 
-	body := lipgloss.JoinHorizontal(lipgloss.Top, m.sidebar(), m.mainPane())
+	lay := m.layout(m.visible(), m.mainInnerWidth(), m.listHeight())
+	body := lipgloss.JoinHorizontal(lipgloss.Top, m.sidebar(), m.mainPane(lay))
 	return strings.Join([]string{
 		m.titleBar(),
 		m.searchBar(),
@@ -86,58 +98,148 @@ func (m Model) sidebar() string {
 	return style.Width(sidebarWidth).Height(m.listHeight()).Render(b.String())
 }
 
-// line is one rendered row of the main pane: either a section header or a
-// selectable binding (itemIdx >= 0).
+// line is one rendered row of the main pane: either a section header, a blank
+// section gap, or one physical row of a binding (itemIdx >= 0). A binding whose
+// description wraps contributes several rows that share its itemIdx.
 type line struct {
 	text    string
 	itemIdx int
 }
 
-func (m Model) mainPane() string {
-	items := m.visible()
-	width := max(m.width-sidebarWidth-2, 20) // minus gap + pane border slack
-	innerWidth := width - 4                  // pane padding + border
+// paneLayout is the resolved geometry of the hotkey pane for one render.
+type paneLayout struct {
+	cols, colWidth, contentWidth, capacity int
+	lines                                  []line
+	overflow                               bool
+	tooSmall                               bool
+}
 
-	h := m.listHeight()
-	allLines := m.buildLines(items, innerWidth, 0) // probe pass for line count
-	overflow := len(allLines) > h
-	rowWidth := innerWidth
-	if overflow {
-		rowWidth -= 2 // make room for the scrollbar column
+// layout resolves how the visible items pack into newspaper columns. Because
+// descriptions wrap, the line count depends on the column width, so the lines
+// are built here at the chosen width rather than probed up front.
+func (m Model) layout(items []search.Item, innerWidth, h int) paneLayout {
+	keyW := keyColumnWidth(items)
+	cols := m.columnCount(innerWidth, keyW)
+	if cols < 1 {
+		return paneLayout{tooSmall: true}
 	}
-	keyW := keyColumnWidth(items, rowWidth)
-	lines := m.buildLines(items, rowWidth, keyW)
-	visibleLines, start := m.window(lines)
 
-	var b strings.Builder
-	for i, ln := range visibleLines {
-		b.WriteString(ln.text)
-		if i < len(visibleLines)-1 {
-			b.WriteByte('\n')
+	contentWidth := innerWidth
+	colWidth := colWidthFor(contentWidth, cols)
+	lines := m.buildLines(items, colWidth, keyW)
+
+	// Use only as many columns as the content fills; fewer columns make the
+	// ones in use wider rather than leaving a blank column on the right.
+	if needed := max((len(lines)+h-1)/h, 1); cols > needed {
+		cols = needed
+		colWidth = colWidthFor(contentWidth, cols)
+		lines = m.buildLines(items, colWidth, keyW)
+	}
+
+	// Reserve a scrollbar column only when the paged capacity (cols*h) overflows
+	// and a readable column still survives the two cells it costs.
+	overflow := len(lines) > cols*h
+	if overflow {
+		if c := m.columnCount(contentWidth-2, keyW); c >= 1 {
+			contentWidth -= 2
+			cols = c
+			colWidth = colWidthFor(contentWidth, cols)
+			lines = m.buildLines(items, colWidth, keyW)
+			overflow = len(lines) > cols*h
+		} else {
+			overflow = false // too tight for a scrollbar; use the full width
 		}
 	}
-	if len(items) == 0 {
-		b.WriteString(placeholder.Render("no matches"))
-	}
+	return paneLayout{cols, colWidth, contentWidth, cols * h, lines, overflow, false}
+}
 
-	content := b.String()
-	if overflow {
-		bar := scrollbar(h, len(lines), start)
-		content = lipgloss.JoinHorizontal(lipgloss.Top,
-			lipgloss.NewStyle().Width(rowWidth+1).Render(content), bar)
-	}
+func colWidthFor(width, cols int) int {
+	return (width - colGap*(cols-1)) / cols
+}
 
+// LayoutColumns reports how many newspaper columns the hotkey pane renders at
+// the current terminal size. Exposed so behavioral tests can assert the layout.
+func (m Model) LayoutColumns() int {
+	if !m.ready {
+		return 0
+	}
+	return m.layout(m.visible(), m.mainInnerWidth(), m.listHeight()).cols
+}
+
+// columnCount is how many newspaper columns to render. With no user override
+// (m.cols == 0) it auto-fits the width; otherwise it honors the requested
+// count. Either way it never gives a column narrower than is readable, and
+// returns 0 when not even one column fits (the caller shows a resize prompt).
+func (m Model) columnCount(innerWidth, keyW int) int {
+	minW := rowIndent + keyW + keyGap + minDescWidth
+	fit := (innerWidth + colGap) / (minW + colGap)
+	if fit < 1 {
+		return 0
+	}
+	if m.cols > 0 {
+		return min(m.cols, min(fit, maxColumns))
+	}
+	return min(fit, maxColumns)
+}
+
+func (m Model) mainPane(lay paneLayout) string {
 	style := paneStyle
 	if m.mode == modeSearch {
 		style = paneActiveStyle
 	}
+	width := m.mainWidth()
+	h := m.listHeight()
+
+	if lay.tooSmall {
+		msg := placeholder.Render("Window too small — enlarge it to view hotkeys")
+		return style.Width(width).Height(h).Render(msg)
+	}
+
+	visibleLines, start := m.window(lay.lines, lay.capacity)
+	content := flowColumns(visibleLines, lay.cols, h, lay.colWidth)
+	if len(lay.lines) == 0 {
+		content = placeholder.Render("no matches")
+	}
+	if lay.overflow {
+		bar := scrollbar(h, len(lay.lines), lay.capacity, start)
+		content = lipgloss.JoinHorizontal(lipgloss.Top,
+			lipgloss.NewStyle().Width(lay.contentWidth+1).Render(content), bar)
+	}
 	return style.Width(width).Height(h).Render(content)
 }
 
+// flowColumns lays the windowed lines into up to cols newspaper columns of h
+// rows each — the first h lines fill column one, the next h fill column two,
+// and so on — then joins the columns side by side.
+func flowColumns(lines []line, cols, h, colWidth int) string {
+	blocks := make([]string, 0, cols)
+	for c := range cols {
+		lo := c * h
+		if lo >= len(lines) {
+			break
+		}
+		hi := min(lo+h, len(lines))
+		var b strings.Builder
+		for i := lo; i < hi; i++ {
+			b.WriteString(lines[i].text)
+			if i < hi-1 {
+				b.WriteByte('\n')
+			}
+		}
+		style := lipgloss.NewStyle().Width(colWidth)
+		if c < cols-1 {
+			style = style.MarginRight(colGap)
+		}
+		blocks = append(blocks, style.Render(b.String()))
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Top, blocks...)
+}
+
 // scrollbar renders a vertical track of height h with a proportional thumb.
-func scrollbar(h, total, start int) string {
-	thumbLen := max(h*h/total, 1)
-	maxStart := total - h
+// visible is how many of the total lines the paged columns show at once.
+func scrollbar(h, total, visible, start int) string {
+	thumbLen := max(h*visible/total, 1)
+	maxStart := total - visible
 	thumbPos := 0
 	if maxStart > 0 {
 		thumbPos = start * (h - thumbLen) / maxStart
@@ -156,21 +258,23 @@ func scrollbar(h, total, start int) string {
 	return b.String()
 }
 
-// keyColumnWidth sizes the keycap column to the widest key on screen so rows
-// stay aligned without wrapping, clamped to a sane range of the pane width.
-func keyColumnWidth(items []search.Item, innerWidth int) int {
+// keyColumnWidth sizes the keycap column to the widest key on screen so keys
+// stay on one line, clamped to a floor (short keys still read as a column) and
+// a ceiling (a pathologically long key truncates rather than starve the desc).
+func keyColumnWidth(items []search.Item) int {
 	widest := 0
 	for _, it := range items {
 		if w := lipgloss.Width(it.Keys); w > widest {
 			widest = w
 		}
 	}
-	return min(max(widest, 10), max(innerWidth/2, 10))
+	return min(max(widest, 6), maxKeyWidth)
 }
 
 // buildLines flattens visible items into display lines, inserting a section
-// header whenever the (sheet, section) grouping changes.
-func (m Model) buildLines(items []search.Item, innerWidth, keyW int) []line {
+// header whenever the (sheet, section) grouping changes. A binding whose
+// description wraps contributes one line per wrapped row.
+func (m Model) buildLines(items []search.Item, colWidth, keyW int) []line {
 	var lines []line
 	prevGroup := ""
 	for idx, it := range items {
@@ -186,36 +290,47 @@ func (m Model) buildLines(items []search.Item, innerWidth, keyW int) []line {
 			lines = append(lines, line{text: sectionStyle.Render(header), itemIdx: -1})
 			prevGroup = group
 		}
-		lines = append(lines, line{text: m.renderRow(it, idx, innerWidth, keyW), itemIdx: idx})
+		for _, row := range renderItemRows(it, idx == m.cursor, colWidth, keyW) {
+			lines = append(lines, line{text: row, itemIdx: idx})
+		}
 	}
 	return lines
 }
 
-func (m Model) renderRow(it search.Item, idx, innerWidth, keyW int) string {
-	selected := idx == m.cursor
-	key := kbdStyle.Width(keyW).MaxHeight(1).Render(it.Keys)
-	// Row budget: 2-cell indent + key column + 1-cell gap + description.
-	descW := max(innerWidth-keyW-3, 4)
+// renderItemRows renders one binding into one-or-more physical rows: the key
+// sits beside the first line of the description, and continuation lines of a
+// wrapped description align under it with a blank key column.
+func renderItemRows(it search.Item, selected bool, colWidth, keyW int) []string {
+	descW := max(colWidth-keyW-rowIndent-keyGap, minDescWidth)
 	dStyle := descStyle
 	if selected {
 		dStyle = descSelStyle
 	}
-	desc := dStyle.MaxWidth(descW).Render(it.Desc)
+	descLines := strings.Split(dStyle.Width(descW).Render(it.Desc), "\n")
+	indent := strings.Repeat(" ", rowIndent)
+	gap := strings.Repeat(" ", keyGap)
 
-	row := lipgloss.JoinHorizontal(lipgloss.Top, "  ", key, " ", desc)
-	if selected {
-		return rowSelStyle.Width(innerWidth).Render(row)
+	rows := make([]string, len(descLines))
+	for i, dl := range descLines {
+		keyCell := strings.Repeat(" ", keyW)
+		if i == 0 {
+			keyCell = kbdStyle.Width(keyW).MaxHeight(1).Render(it.Keys)
+		}
+		row := lipgloss.JoinHorizontal(lipgloss.Top, indent, keyCell, gap, dl)
+		if selected {
+			row = rowSelStyle.Width(colWidth).Render(row)
+		}
+		rows[i] = row
 	}
-	return row
+	return rows
 }
 
-// window returns the slice of display lines that fits the pane plus its start
-// offset. Scroll position is derived purely from the cursor: the selected row
-// is kept centred once the list is long enough to scroll, which is stateless
-// and always keeps context visible above and below.
-func (m Model) window(lines []line) ([]line, int) {
-	h := m.listHeight()
-	if len(lines) <= h {
+// window returns the slice of display lines that fits the paged columns plus
+// its start offset. Scroll position is derived purely from the cursor: the
+// selected row is kept centred once the list is long enough to scroll, which is
+// stateless and always keeps context visible above and below.
+func (m Model) window(lines []line, capacity int) ([]line, int) {
+	if len(lines) <= capacity {
 		return lines, 0
 	}
 	cursorLine := 0
@@ -225,8 +340,8 @@ func (m Model) window(lines []line) ([]line, int) {
 			break
 		}
 	}
-	start := min(max(cursorLine-h/2, 0), len(lines)-h)
-	return lines[start : start+h], start
+	start := min(max(cursorLine-capacity/2, 0), len(lines)-capacity)
+	return lines[start : start+capacity], start
 }
 
 func (m Model) footer() string {
@@ -236,9 +351,15 @@ func (m Model) footer() string {
 			{"type", "filter"}, {"↑↓", "move"}, {"esc", "exit"}, {"^c", "quit"},
 		}
 	} else {
+		// The column control always reflects the chosen setting — "auto" or the
+		// pinned count — not how many columns happen to be visible right now.
+		cols := "auto"
+		if m.cols > 0 {
+			cols = fmt.Sprintf("%d", m.cols)
+		}
 		keys = []struct{ k, label string }{
 			{"j/k", "move"}, {"h/l·tab", "sheet"}, {"g/G", "top/bottom"},
-			{"/", "search"}, {"q", "quit"},
+			{"c", "cols:" + cols}, {"/", "search"}, {"q", "quit"},
 		}
 	}
 	parts := make([]string, len(keys))

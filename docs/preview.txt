@@ -21,4 +21,4 @@
 │                      ││   n / N                 Next / previous match                  ░   │
 │                      ││   :%s/old/new/g         Replace all in file                    ░   │
 ╰──────────────────────╯╰────────────────────────────────────────────────────────────────────╯
-j/k move  ·  h/l·tab sheet  ·  g/G top/bottom  ·  / search  ·  q quit
+j/k move  ·  h/l·tab sheet  ·  g/G top/bottom  ·  c cols:auto  ·  / search  ·  q quit

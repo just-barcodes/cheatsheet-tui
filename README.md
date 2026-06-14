@@ -11,6 +11,8 @@ TUI that opens instantly.
 - **YAML cheatsheets** — one file per program/app/type (`vim`, `hyprland`,
   `system`, …), grouped into sections.
 - **Instant fuzzy search** (`/`) across every cheatsheet at once.
+- **Multi-column layout** — hotkeys flow into side-by-side columns on wide
+  terminals; press `c` to choose the column count yourself.
 - **Vim navigation** — `j/k` move, `h/l` / `tab` switch sheets, `g/G` top/bottom,
   `ctrl-d/ctrl-u` half-page.
 - **Modern look** — rounded panes, colour-coded keycaps, a highlighted
@@ -95,6 +97,7 @@ sorted by `name`.
 | `h` / `l`, `tab` | Previous / next cheatsheet |
 | `g` / `G` | Jump to top / bottom |
 | `ctrl-d` / `ctrl-u` | Half-page down / up |
+| `c` | Cycle hotkey columns (auto → 1 → 2 → 3); current setting shown in the footer |
 | `/` | Search all hotkeys |
 | `esc` | Exit search |
 | `q`, `ctrl-c` | Quit |

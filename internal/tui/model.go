@@ -23,6 +23,7 @@ type Model struct {
 
 	sheetIdx int // selected sheet in the sidebar
 	cursor   int // selected row within the visible list
+	cols     int // requested hotkey columns; 0 means auto-fit to width
 
 	mode  mode
 	query string
@@ -111,6 +112,8 @@ func (m Model) updateNormal(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.switchSheet(1)
 	case "shift+tab", "h", "left":
 		m.switchSheet(-1)
+	case "c":
+		m.cycleColumns()
 	}
 	return m, nil
 }
@@ -178,6 +181,12 @@ func (m *Model) switchSheet(delta int) {
 	}
 	m.sheetIdx = (m.sheetIdx + delta + len(m.sheets)) % len(m.sheets)
 	m.cursor = 0
+}
+
+// cycleColumns steps the requested hotkey column count through
+// auto → 1 → 2 → 3 → auto, letting the user override the width-based default.
+func (m *Model) cycleColumns() {
+	m.cols = (m.cols + 1) % (maxColumns + 1)
 }
 
 // pageStep is how far ctrl-d/ctrl-u jump.

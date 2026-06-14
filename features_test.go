@@ -11,6 +11,7 @@ import (
 
 	"github.com/just-barcodes/cheatsheet-tui/internal/config"
 	"github.com/just-barcodes/cheatsheet-tui/internal/search"
+	"github.com/just-barcodes/cheatsheet-tui/internal/tui"
 )
 
 // featureState holds the world shared between steps in a scenario.
@@ -27,6 +28,9 @@ type featureState struct {
 	loc      config.Locator
 	existing map[string]bool
 	resolved config.Source
+
+	model    tui.Model
+	rendered string
 }
 
 // --- loading steps ---
@@ -291,6 +295,18 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the results do not contain key "([^"]*)"$`, s.theResultsDoNotContainKey)
 	ctx.Step(`^I get (\d+) results$`, s.iGetNResults)
 	ctx.Step(`^result (\d+) has key "([^"]*)"$`, s.resultNHasKey)
+
+	ctx.Step(`^a cheatsheet "([^"]*)" with (\d+) bindings$`, s.aCheatsheetWithBindings)
+	ctx.Step(`^a cheatsheet "([^"]*)" with a long description ending in "([^"]*)"$`, s.aCheatsheetWithLongDescription)
+	ctx.Step(`^a terminal (\d+) columns wide and (\d+) rows tall$`, s.aTerminalSized)
+	ctx.Step(`^I view the cheatsheet$`, s.iViewTheCheatsheet)
+	ctx.Step(`^the hotkeys are laid out in (\d+) columns?$`, s.theHotkeysAreLaidOutInColumns)
+	ctx.Step(`^binding "([^"]*)" is visible$`, s.bindingIsVisible)
+	ctx.Step(`^binding "([^"]*)" is not visible$`, s.bindingIsNotVisible)
+	ctx.Step(`^the screen shows the column count "([^"]*)"$`, s.theScreenShowsColumnCount)
+	ctx.Step(`^the screen asks for a larger window$`, s.theScreenAsksForALargerWindow)
+	ctx.Step(`^I set the column count to (\d+)$`, s.iSetTheColumnCountTo)
+	ctx.Step(`^I cycle the column count (\d+) times$`, s.iCycleTheColumnCount)
 
 	ctx.Step(`^the --dir flag is "([^"]*)"$`, s.theDirFlagIs)
 	ctx.Step(`^the CHEATSHEET_DIR env var is "([^"]*)"$`, s.theEnvVarIs)
