@@ -186,7 +186,9 @@ colors:
   selection: "#312E81"     # highlighted row background
 `
 
-// configDir is ~/.config/cheatsheet (or the OS equivalent), or "" if unknown.
+// configDir is the cheatsheet config directory, or "" if unknown. It follows
+// the XDG Base Directory spec via os.UserConfigDir: $XDG_CONFIG_HOME/cheatsheet
+// when set, else ~/.config/cheatsheet on Linux (or the OS equivalent elsewhere).
 func configDir() string {
 	cfg, err := os.UserConfigDir()
 	if err != nil {
