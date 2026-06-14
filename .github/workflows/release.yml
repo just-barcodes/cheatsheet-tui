@@ -28,7 +28,7 @@ jobs:
       # identical to running `task release:build` locally.
       - run: task release:build
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/cheatsheet_*
