@@ -17,7 +17,7 @@ jobs:
 
       # .mise.toml redirects GOMODCACHE/GOCACHE into .go/, so caching that
       # one directory covers both modules and build cache.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: .go
           key: go-${{ runner.os }}-${{ hashFiles('go.sum') }}
