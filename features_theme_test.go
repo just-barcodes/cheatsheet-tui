@@ -39,6 +39,16 @@ func (s *featureState) theAccentColorIs(want string) error {
 	return nil
 }
 
+func (s *featureState) theBackgroundColorIs(want string) error {
+	if s.themeErr != nil {
+		return s.themeErr
+	}
+	if got := s.theme.Colors.Background; got != want {
+		return fmt.Errorf("background = %q, want %q", got, want)
+	}
+	return nil
+}
+
 func (s *featureState) theKeycapColorIs(want string) error {
 	if s.themeErr != nil {
 		return s.themeErr
@@ -117,6 +127,32 @@ func (s *featureState) aMissingThemeFileIsAllowed() error {
 func (s *featureState) noThemeFileIsLoaded() error {
 	if s.themeSrc.Path != "" {
 		return fmt.Errorf("expected no theme file, got %q", s.themeSrc.Path)
+	}
+	return nil
+}
+
+func (s *featureState) theThemeUsesTheBuiltinPreset(name string) error {
+	if s.themeSrc.Preset != name {
+		return fmt.Errorf("preset = %q, want %q", s.themeSrc.Preset, name)
+	}
+	return nil
+}
+
+func (s *featureState) theSectionHeaderColorMatchesTheAccent() error {
+	if s.themeErr != nil {
+		return s.themeErr
+	}
+	// AccentBright drives the section headers and footer keys; keeping it equal
+	// to Accent is what keeps a preset to a single, cohesive accent hue.
+	if s.theme.Colors.AccentBright != s.theme.Colors.Accent {
+		return fmt.Errorf("section-header color %q != accent %q", s.theme.Colors.AccentBright, s.theme.Colors.Accent)
+	}
+	return nil
+}
+
+func (s *featureState) theBuiltinThemesInclude(name string) error {
+	if !config.IsPreset(name) {
+		return fmt.Errorf("built-in themes %v do not include %q", config.PresetNames(), name)
 	}
 	return nil
 }

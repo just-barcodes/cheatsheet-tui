@@ -174,10 +174,12 @@ func TestScrollWindowFollowsCursorToBottom(t *testing.T) {
 	m := readyBig(16)
 	m = press(m, "G")
 	v := m.View()
-	if !strings.Contains(v, "Binding 7 in section 5") {
+	// "Binding 7 in" is the wrap-safe prefix of the last item's description
+	// (the full phrase may break across wrapped lines).
+	if !strings.Contains(v, "Binding 7 in") {
 		t.Fatalf("expected last binding visible after G, got:\n%s", v)
 	}
-	if strings.Contains(v, "Binding 0 in section 0") {
+	if strings.Contains(v, "Binding 0 in") {
 		t.Fatalf("expected first binding scrolled out after G, got:\n%s", v)
 	}
 }

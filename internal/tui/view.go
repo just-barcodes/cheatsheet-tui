@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -30,8 +31,10 @@ func (m Model) listHeight() int {
 }
 
 // mainWidth is the outer width of the hotkey pane; mainInnerWidth is the space
-// left for content once the pane border and padding are removed.
-func (m Model) mainWidth() int      { return max(m.width-sidebarWidth-2, 20) }
+// left for content once the pane border and padding are removed. The 4 covers
+// the sidebar's and the main pane's two vertical borders, so sidebar + main
+// exactly fills the terminal width (no 2-column overhang on the right).
+func (m Model) mainWidth() int      { return max(m.width-sidebarWidth-4, 20) }
 func (m Model) mainInnerWidth() int { return m.mainWidth() - 4 }
 
 // View implements tea.Model.
@@ -45,12 +48,43 @@ func (m Model) View() string {
 
 	lay := m.layout(m.visible(), m.mainInnerWidth(), m.listHeight())
 	body := lipgloss.JoinHorizontal(lipgloss.Top, m.sidebar(), m.mainPane(lay))
-	return strings.Join([]string{
+	view := strings.Join([]string{
 		m.titleBar(),
 		m.searchBar(),
 		body,
 		m.footer(),
 	}, "\n")
+	return paintBackground(view, m.width, m.height)
+}
+
+// paintBackground fills the whole terminal with the theme background. lipgloss
+// emits a reset (\x1b[0m) at the end of every styled span, which drops the
+// background for the cells that follow; this re-asserts it after each reset and
+// at every line start, then pads each line to full width and the screen to full
+// height. Spans that set their own background (the title/sidebar bars, the
+// selected row) are single styled blocks, so their fill survives untouched and
+// the screen background simply resumes after them.
+func paintBackground(view string, w, h int) string {
+	if !hasBackground {
+		return view
+	}
+	const reset = "\x1b[0m"
+	lines := strings.Split(view, "\n")
+	out := make([]string, 0, max(h, len(lines)))
+	for _, ln := range lines {
+		if lipgloss.Width(ln) > w { // a line wider than the screen would wrap
+			ln = lipgloss.NewStyle().MaxWidth(w).Render(ln)
+		}
+		painted := bgOpenSeq + strings.ReplaceAll(ln, reset, reset+bgOpenSeq)
+		if pad := w - lipgloss.Width(ln); pad > 0 {
+			painted += strings.Repeat(" ", pad)
+		}
+		out = append(out, painted+reset)
+	}
+	for len(out) < h {
+		out = append(out, bgOpenSeq+strings.Repeat(" ", w)+reset)
+	}
+	return strings.Join(out, "\n")
 }
 
 func (m Model) titleBar() string {
@@ -300,30 +334,53 @@ func (m Model) buildLines(items []search.Item, colWidth, keyW int) []line {
 // renderItemRows renders one binding into one-or-more physical rows: the key
 // sits beside the first line of the description, and continuation lines of a
 // wrapped description align under it with a blank key column.
+//
+// The selected row is emitted as a single styled block so its highlight bar is
+// one continuous fill — both prettier and a precondition for clean background
+// painting, which re-asserts the screen background after every style reset.
 func renderItemRows(it search.Item, selected bool, colWidth, keyW int) []string {
 	descW := max(colWidth-keyW-rowIndent-keyGap, minDescWidth)
-	dStyle := descStyle
-	if selected {
-		dStyle = descSelStyle
-	}
-	descLines := strings.Split(dStyle.Width(descW).Render(it.Desc), "\n")
 	indent := strings.Repeat(" ", rowIndent)
 	gap := strings.Repeat(" ", keyGap)
 
+	if selected {
+		descLines := strings.Split(plainWrap(it.Desc, descW), "\n")
+		rows := make([]string, len(descLines))
+		for i, dl := range descLines {
+			keyCell := strings.Repeat(" ", keyW)
+			if i == 0 {
+				keyCell = plainCell(it.Keys, keyW)
+			}
+			rows[i] = rowSelStyle.Width(colWidth).Render(indent + keyCell + gap + dl)
+		}
+		return rows
+	}
+
+	descLines := strings.Split(descStyle.Width(descW).Render(it.Desc), "\n")
 	rows := make([]string, len(descLines))
 	for i, dl := range descLines {
 		keyCell := strings.Repeat(" ", keyW)
 		if i == 0 {
 			keyCell = kbdStyle.Width(keyW).MaxHeight(1).Render(it.Keys)
 		}
-		row := lipgloss.JoinHorizontal(lipgloss.Top, indent, keyCell, gap, dl)
-		if selected {
-			row = rowSelStyle.Width(colWidth).Render(row)
-		}
-		rows[i] = row
+		rows[i] = lipgloss.JoinHorizontal(lipgloss.Top, indent, keyCell, gap, dl)
 	}
 	return rows
 }
+
+// plainWrap word-wraps s to width w and pads each line to w cells, with no
+// styling, so it can be wrapped in a single background-bearing style without
+// inner resets breaking the fill.
+func plainWrap(s string, w int) string {
+	return ansiSeq.ReplaceAllString(lipgloss.NewStyle().Width(w).Render(s), "")
+}
+
+// plainCell pads or truncates s to a single w-cell line, unstyled.
+func plainCell(s string, w int) string {
+	return ansiSeq.ReplaceAllString(lipgloss.NewStyle().Width(w).MaxHeight(1).Render(s), "")
+}
+
+var ansiSeq = regexp.MustCompile("\x1b\\[[0-9;]*m")
 
 // window returns the slice of display lines that fits the paged columns plus
 // its start offset. Scroll position is derived purely from the cursor: the

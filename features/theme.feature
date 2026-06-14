@@ -70,3 +70,68 @@ Feature: Theming the UI with a config file
   Scenario: With neither, no theme file is loaded
     When I resolve the theme source
     Then no theme file is loaded
+
+  Scenario: Selenized and Solarized ship as built-in themes
+    Then the built-in themes include "selenized-dark"
+    And the built-in themes include "selenized-light"
+    And the built-in themes include "solarized-dark"
+    And the built-in themes include "solarized-light"
+
+  Scenario: The Solarized preset uses its canonical colors
+    Given a theme file with content:
+      """
+      name: solarized-dark
+      """
+    When I load that theme
+    Then the background color is "#002b36"
+    And the accent color is "#268bd2"
+    And the keycap color is "#2aa198"
+
+  Scenario: A themed preset keeps one accent hue for chrome and headers
+    Given a theme file with content:
+      """
+      name: selenized-dark
+      """
+    When I load that theme
+    Then the accent color is "#4695f7"
+    And the section-header color matches the accent
+
+  Scenario: The --theme flag accepts a built-in preset name
+    Given the --theme flag is "selenized-light"
+    When I resolve the theme source
+    Then the theme uses the built-in preset "selenized-light"
+
+  Scenario: A --theme value that is not a preset is treated as a file path
+    Given the --theme flag is "/themes/mine.yaml"
+    When I resolve the theme source
+    Then the theme loads from "/themes/mine.yaml"
+    And the theme file is required to exist
+
+  Scenario: A theme file can start from a built-in preset
+    Given a theme file with content:
+      """
+      name: selenized-dark
+      """
+    When I load that theme
+    Then the accent color is "#4695f7"
+    And the keycap color is "#41c7b9"
+    And the background color is "#103c48"
+
+  Scenario: A preset is overridden per color
+    Given a theme file with content:
+      """
+      name: selenized-dark
+      colors:
+        keycap: "#ffffff"
+      """
+    When I load that theme
+    Then the accent color is "#4695f7"
+    And the keycap color is "#ffffff"
+
+  Scenario: An unknown preset name is reported
+    Given a theme file with content:
+      """
+      name: selenized-blarg
+      """
+    When I load that theme
+    Then loading the theme fails with an error

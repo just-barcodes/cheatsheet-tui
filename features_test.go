@@ -326,6 +326,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^I load that theme$`, s.iLoadThatTheme)
 	ctx.Step(`^the accent color is "([^"]*)"$`, s.theAccentColorIs)
 	ctx.Step(`^the keycap color is "([^"]*)"$`, s.theKeycapColorIs)
+	ctx.Step(`^the background color is "([^"]*)"$`, s.theBackgroundColorIs)
 	ctx.Step(`^the accent color is unset$`, s.theAccentColorIsUnset)
 	ctx.Step(`^the foreground color is unset$`, s.theForegroundColorIsUnset)
 	ctx.Step(`^loading the theme fails with an error$`, s.loadingTheThemeFails)
@@ -337,6 +338,9 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the theme file is required to exist$`, s.theThemeFileIsRequiredToExist)
 	ctx.Step(`^a missing theme file is allowed$`, s.aMissingThemeFileIsAllowed)
 	ctx.Step(`^no theme file is loaded$`, s.noThemeFileIsLoaded)
+	ctx.Step(`^the theme uses the built-in preset "([^"]*)"$`, s.theThemeUsesTheBuiltinPreset)
+	ctx.Step(`^the built-in themes include "([^"]*)"$`, s.theBuiltinThemesInclude)
+	ctx.Step(`^the section-header color matches the accent$`, s.theSectionHeaderColorMatchesTheAccent)
 
 	ctx.Step(`^the --dir flag is "([^"]*)"$`, s.theDirFlagIs)
 	ctx.Step(`^the CHEATSHEET_DIR env var is "([^"]*)"$`, s.theEnvVarIs)

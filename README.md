@@ -95,8 +95,29 @@ sorted by `name`.
 Drop a `theme.yaml` in your config dir (`~/.config/cheatsheet`) to recolor the
 UI — no code, no rebuild. `--init` seeds one with the defaults; edit a value, or
 delete a line to keep that default. Each color is a hex string (`"#A78BFA"`) or
-a `0`–`255` terminal color number. Point at a theme elsewhere with
-`--theme <path>` (or `-t`), which overrides the config-dir default.
+a `0`–`255` terminal color number.
+
+Built-in themes (`--list-themes`): `default`, `selenized-dark/-light`,
+`solarized-dark/-light`, `dracula`, `nord`, `gruvbox-dark/-light`, `tokyo-night`,
+`catppuccin-mocha`. Use one directly, or as a starting point:
+
+```sh
+./cheatsheet --theme selenized-dark   # or -t; a name or a path to a theme.yaml
+```
+
+```yaml
+# ~/.config/cheatsheet/theme.yaml — base on a preset, then tweak a few colors
+name: selenized-dark
+colors:
+  keycap: "#ffffff"
+```
+
+Set `background` to paint the whole UI with the theme's color (the Selenized
+presets do this, so they look right on any terminal); omit it to keep your
+terminal's own background and transparency.
+
+`--theme` takes either a built-in name or a path to a theme.yaml anywhere, and
+overrides the config-dir default.
 
 ```yaml
 colors:

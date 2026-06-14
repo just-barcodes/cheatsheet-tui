@@ -41,7 +41,8 @@ func main() {
 	flag.CommandLine.Init("cheatsheet", flag.ContinueOnError)
 	dir := flag.StringP("dir", "d", "", "directory of cheatsheet .yaml files (overrides the default search)")
 	doInit := flag.Bool("init", false, "copy the built-in cheatsheets into your config dir, then exit")
-	themePath := flag.StringP("theme", "t", "", "path to a theme.yaml (overrides ~/.config/cheatsheet/theme.yaml)")
+	themePath := flag.StringP("theme", "t", "", "built-in theme name or path to a theme.yaml (see --list-themes)")
+	listThemes := flag.Bool("list-themes", false, "list the built-in themes, then exit")
 	showVersion := flag.BoolP("version", "v", false, "print the version and exit")
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
@@ -54,6 +55,13 @@ func main() {
 
 	if *showVersion {
 		fmt.Println("cheatsheet " + version)
+		return
+	}
+
+	if *listThemes {
+		for _, name := range config.PresetNames() {
+			fmt.Println(name)
+		}
 		return
 	}
 
@@ -86,16 +94,21 @@ func main() {
 	}
 
 	themeSrc := config.ThemeLocator{Flag: *themePath, ConfigDir: cfgDir}.Resolve()
-	if themeSrc.Path != "" {
+	var theme config.Theme
+	switch {
+	case themeSrc.Preset != "":
+		theme, _ = config.Preset(themeSrc.Preset)
+	case themeSrc.Path != "":
 		if themeSrc.MustExist && !fileExists(themeSrc.Path) {
-			fatal(fmt.Errorf("theme file not found: %s", themeSrc.Path))
+			fatal(fmt.Errorf("theme file not found: %s (run --list-themes for built-in names)", themeSrc.Path))
 		}
-		theme, err := config.LoadThemeFile(themeSrc.Path)
+		t, err := config.LoadThemeFile(themeSrc.Path)
 		if err != nil {
 			fatal(err)
 		}
-		tui.ApplyTheme(theme)
+		theme = t
 	}
+	tui.ApplyTheme(theme)
 
 	p := tea.NewProgram(tui.New(sheets), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -159,7 +172,11 @@ func scaffold(dir string) error {
 // back to that default.
 const themeSample = `# cheatsheet colors — edit a value, or delete a line to keep the default.
 # Each color is a hex string ("#A78BFA") or a 0–255 terminal color number.
+#
+# Start from a built-in theme and tweak from there (see: cheatsheet --list-themes):
+# name: selenized-dark
 colors:
+  # background: "#103c48"  # uncomment to paint the UI background (else terminal-native)
   accent: "#A78BFA"        # headings, active border, search prompt
   accent_bright: "#C4B5FD" # section titles, footer keys
   keycap: "#22D3EE"        # the hotkeys themselves
