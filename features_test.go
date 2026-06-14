@@ -31,6 +31,13 @@ type featureState struct {
 
 	model    tui.Model
 	rendered string
+
+	themePath string
+	theme     config.Theme
+	themeErr  error
+
+	themeLoc config.ThemeLocator
+	themeSrc config.ThemeSource
 }
 
 // --- loading steps ---
@@ -107,6 +114,11 @@ func (s *featureState) aDirectoryWithCheatsheets(table *godog.Table) error {
 		}
 	}
 	return nil
+}
+
+func (s *featureState) theDirectoryAlsoContainsAThemeFile() error {
+	body := "colors:\n  accent: \"#FF8800\"\n"
+	return os.WriteFile(filepath.Join(s.dir, config.ThemeFileName), []byte(body), 0o644)
 }
 
 func (s *featureState) iLoadTheDirectory() error {
@@ -285,6 +297,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^loading fails with an error$`, s.loadingFailsWithAnError)
 
 	ctx.Step(`^a directory with cheatsheets:$`, s.aDirectoryWithCheatsheets)
+	ctx.Step(`^the directory also contains a theme.yaml$`, s.theDirectoryAlsoContainsAThemeFile)
 	ctx.Step(`^I load the directory$`, s.iLoadTheDirectory)
 	ctx.Step(`^I get (\d+) cheatsheets$`, s.iGetNCheatsheets)
 	ctx.Step(`^the cheatsheets are ordered "([^"]*)"$`, s.theCheatsheetsAreOrdered)
@@ -307,6 +320,23 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the screen asks for a larger window$`, s.theScreenAsksForALargerWindow)
 	ctx.Step(`^I set the column count to (\d+)$`, s.iSetTheColumnCountTo)
 	ctx.Step(`^I cycle the column count (\d+) times$`, s.iCycleTheColumnCount)
+
+	ctx.Step(`^a theme file with content:$`, s.aThemeFileWithContent)
+	ctx.Step(`^no theme file exists$`, s.noThemeFileExists)
+	ctx.Step(`^I load that theme$`, s.iLoadThatTheme)
+	ctx.Step(`^the accent color is "([^"]*)"$`, s.theAccentColorIs)
+	ctx.Step(`^the keycap color is "([^"]*)"$`, s.theKeycapColorIs)
+	ctx.Step(`^the accent color is unset$`, s.theAccentColorIsUnset)
+	ctx.Step(`^the foreground color is unset$`, s.theForegroundColorIsUnset)
+	ctx.Step(`^loading the theme fails with an error$`, s.loadingTheThemeFails)
+
+	ctx.Step(`^the --theme flag is "([^"]*)"$`, s.theThemeFlagIs)
+	ctx.Step(`^a config directory "([^"]*)" for the theme$`, s.aConfigDirForTheTheme)
+	ctx.Step(`^I resolve the theme source$`, s.iResolveTheThemeSource)
+	ctx.Step(`^the theme loads from "([^"]*)"$`, s.theThemeLoadsFrom)
+	ctx.Step(`^the theme file is required to exist$`, s.theThemeFileIsRequiredToExist)
+	ctx.Step(`^a missing theme file is allowed$`, s.aMissingThemeFileIsAllowed)
+	ctx.Step(`^no theme file is loaded$`, s.noThemeFileIsLoaded)
 
 	ctx.Step(`^the --dir flag is "([^"]*)"$`, s.theDirFlagIs)
 	ctx.Step(`^the CHEATSHEET_DIR env var is "([^"]*)"$`, s.theEnvVarIs)

@@ -66,6 +66,7 @@ Or grab a binary from the GitHub releases page, or build from source as below.
 ```sh
 ./cheatsheet                       # uses your cheatsheets, or the built-ins
 ./cheatsheet --dir ./cheatsheets   # load from an explicit directory
+./cheatsheet --theme ~/dark.yaml   # use a theme file from anywhere
 ```
 
 ## Defining your own cheatsheets
@@ -88,6 +89,28 @@ $EDITOR ~/.config/cheatsheet/vim.yaml
 
 Add a new `*.yaml` file to that directory and it shows up in the sidebar,
 sorted by `name`.
+
+## Theming
+
+Drop a `theme.yaml` in your config dir (`~/.config/cheatsheet`) to recolor the
+UI — no code, no rebuild. `--init` seeds one with the defaults; edit a value, or
+delete a line to keep that default. Each color is a hex string (`"#A78BFA"`) or
+a `0`–`255` terminal color number. Point at a theme elsewhere with
+`--theme <path>` (or `-t`), which overrides the config-dir default.
+
+```yaml
+colors:
+  accent: "#A78BFA"        # headings, active border, search prompt
+  accent_bright: "#C4B5FD" # section titles, footer keys
+  keycap: "#22D3EE"        # the hotkeys themselves
+  foreground: "#E5E7EB"    # descriptions and body text
+  muted: "#6B7280"         # hints, counts, inactive text
+  border: "#3F3F46"        # inactive pane borders, scrollbar track
+  selection: "#312E81"     # highlighted row background
+```
+
+> Terminal apps can't change the font or its size — that's controlled by your
+> terminal emulator — so theming covers colors only.
 
 ## Keys
 

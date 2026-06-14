@@ -41,6 +41,7 @@ func main() {
 	flag.CommandLine.Init("cheatsheet", flag.ContinueOnError)
 	dir := flag.StringP("dir", "d", "", "directory of cheatsheet .yaml files (overrides the default search)")
 	doInit := flag.Bool("init", false, "copy the built-in cheatsheets into your config dir, then exit")
+	themePath := flag.StringP("theme", "t", "", "path to a theme.yaml (overrides ~/.config/cheatsheet/theme.yaml)")
 	showVersion := flag.BoolP("version", "v", false, "print the version and exit")
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		if err == flag.ErrHelp {
@@ -82,6 +83,18 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Run 'cheatsheet --init' to create starter cheatsheets in %s\n", cfgDir)
 		}
 		os.Exit(1)
+	}
+
+	themeSrc := config.ThemeLocator{Flag: *themePath, ConfigDir: cfgDir}.Resolve()
+	if themeSrc.Path != "" {
+		if themeSrc.MustExist && !fileExists(themeSrc.Path) {
+			fatal(fmt.Errorf("theme file not found: %s", themeSrc.Path))
+		}
+		theme, err := config.LoadThemeFile(themeSrc.Path)
+		if err != nil {
+			fatal(err)
+		}
+		tui.ApplyTheme(theme)
 	}
 
 	p := tea.NewProgram(tui.New(sheets), tea.WithAltScreen())
@@ -126,13 +139,35 @@ func scaffold(dir string) error {
 		}
 		written++
 	}
+	if dst := filepath.Join(dir, config.ThemeFileName); !fileExists(dst) {
+		if err := os.WriteFile(dst, []byte(themeSample), 0o644); err != nil {
+			return err
+		}
+	}
+
 	fmt.Printf("Wrote %d cheatsheet(s) to %s", written, dir)
 	if skipped > 0 {
 		fmt.Printf(" (%d already present, left untouched)", skipped)
 	}
 	fmt.Printf("\nEdit them there, then just run: cheatsheet\n")
+	fmt.Printf("Recolor the UI by editing %s\n", filepath.Join(dir, "theme.yaml"))
 	return nil
 }
+
+// themeSample is a ready-to-edit theme.yaml seeded by --init. The values are the
+// built-in defaults, so it changes nothing until edited; delete a line to fall
+// back to that default.
+const themeSample = `# cheatsheet colors — edit a value, or delete a line to keep the default.
+# Each color is a hex string ("#A78BFA") or a 0–255 terminal color number.
+colors:
+  accent: "#A78BFA"        # headings, active border, search prompt
+  accent_bright: "#C4B5FD" # section titles, footer keys
+  keycap: "#22D3EE"        # the hotkeys themselves
+  foreground: "#E5E7EB"    # descriptions and body text
+  muted: "#6B7280"         # hints, counts, inactive text
+  border: "#3F3F46"        # inactive pane borders, scrollbar track
+  selection: "#312E81"     # highlighted row background
+`
 
 // configDir is ~/.config/cheatsheet (or the OS equivalent), or "" if unknown.
 func configDir() string {

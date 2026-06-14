@@ -67,7 +67,7 @@ func LoadDir(dir string) ([]Cheatsheet, error) {
 	}
 	var sheets []Cheatsheet
 	for _, e := range entries {
-		if e.IsDir() || !isYAML(e.Name()) {
+		if e.IsDir() || !isYAML(e.Name()) || e.Name() == ThemeFileName {
 			continue
 		}
 		c, err := LoadFile(filepath.Join(dir, e.Name()))
@@ -89,7 +89,7 @@ func LoadFS(fsys fs.FS) ([]Cheatsheet, error) {
 	}
 	var sheets []Cheatsheet
 	for _, e := range entries {
-		if e.IsDir() || !isYAML(e.Name()) {
+		if e.IsDir() || !isYAML(e.Name()) || e.Name() == ThemeFileName {
 			continue
 		}
 		data, err := fs.ReadFile(fsys, e.Name())

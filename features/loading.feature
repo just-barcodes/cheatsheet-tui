@@ -30,6 +30,16 @@ Feature: Loading cheatsheets from YAML
     Then I get 2 cheatsheets
     And the cheatsheets are ordered "Hyprland, Vim"
 
+  Scenario: A theme.yaml beside the cheatsheets is not loaded as one
+    Given a directory with cheatsheets:
+      | file         | name     |
+      | 02-vim.yaml  | Vim      |
+      | 01-hypr.yaml | Hyprland |
+    And the directory also contains a theme.yaml
+    When I load the directory
+    Then I get 2 cheatsheets
+    And the cheatsheets are ordered "Hyprland, Vim"
+
   Scenario: A malformed file is reported, not silently dropped
     Given a cheatsheet file "broken.yaml" with content:
       """
