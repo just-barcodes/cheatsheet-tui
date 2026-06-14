@@ -61,23 +61,7 @@ func LoadFile(path string) (Cheatsheet, error) {
 
 // LoadDir parses every *.yaml/*.yml file in dir, sorted by sheet name.
 func LoadDir(dir string) ([]Cheatsheet, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var sheets []Cheatsheet
-	for _, e := range entries {
-		if e.IsDir() || !isYAML(e.Name()) || e.Name() == ThemeFileName {
-			continue
-		}
-		c, err := LoadFile(filepath.Join(dir, e.Name()))
-		if err != nil {
-			return nil, err
-		}
-		sheets = append(sheets, c)
-	}
-	sortByName(sheets)
-	return sheets, nil
+	return LoadFS(os.DirFS(dir))
 }
 
 // LoadFS parses every *.yaml/*.yml file at the root of fsys, sorted by sheet
